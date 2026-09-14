@@ -9,6 +9,7 @@ import { IconButton } from '../../shared/ui/IconButton'
 import { ObservacaoModal } from './ObservacaoModal'
 import { RatingModal } from './RatingModal'
 import { EditSpecsModal } from './EditSpecsModal'
+import { ReasonModal } from './ReasonModal'
 
 const ACTION_CLASS: Record<string, string> = {
   coletado: 'coletado',
@@ -43,26 +44,13 @@ export function LoteCard({
   const showAdminTools = !isAtelier && onUpdated
 
   const [modal, setModal] = useState<'observacao' | 'rating' | 'specs' | null>(null)
+  const [revertStep, setRevertStep] = useState<{ stepStatus: WorkItem['status']; stepLabel: string } | null>(null)
 
   async function handleToggleArchive() {
     if (!onUpdated) return
     if (!confirm(`Arquivar o lote ${item.code}? Ele sairá da lista principal.`)) return
     const updated = await workQueueApi.setArchived(item._id, true)
     onUpdated(updated)
-  }
-
-  async function handleRevertStep(stepStatus: WorkItem['status'], stepLabel: string) {
-    if (!onUpdated) return
-    const target = previousStatus(stepStatus)
-    if (!target) return
-    const motivo = window.prompt(`Motivo para desfazer "${stepLabel}" (o lote volta pra etapa anterior):`)
-    if (!motivo) return
-    try {
-      const updated = await workQueueApi.revert(item._id, target, motivo)
-      onUpdated(updated)
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível desfazer esta etapa')
-    }
   }
 
   return (
@@ -134,7 +122,7 @@ export function LoteCard({
               timestamp={step.dateField ? item.statusDates?.[step.dateField] : undefined}
               onRevert={
                 isOwner && onUpdated && done && previousStatus(step.status)
-                  ? () => handleRevertStep(step.status, step.label)
+                  ? () => setRevertStep({ stepStatus: step.status, stepLabel: step.label })
                   : undefined
               }
             />
@@ -199,6 +187,18 @@ export function LoteCard({
           onSaved={(updated) => {
             onUpdated?.(updated)
             setModal(null)
+          }}
+        />
+      )}
+      {revertStep && previousStatus(revertStep.stepStatus) && (
+        <ReasonModal
+          item={item}
+          stepLabel={revertStep.stepLabel}
+          toStatus={previousStatus(revertStep.stepStatus)!}
+          onClose={() => setRevertStep(null)}
+          onSaved={(updated) => {
+            onUpdated?.(updated)
+            setRevertStep(null)
           }}
         />
       )}

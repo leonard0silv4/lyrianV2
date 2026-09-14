@@ -8,6 +8,7 @@ import { SearchBox } from '../../shared/ui/SearchBox'
 import { FilterPopover } from '../../shared/ui/FilterPopover'
 import { Badge, PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
 import { usePermission } from '../permissions/usePermission'
+import { useSse } from '../../shared/hooks/useSse'
 
 export function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
@@ -29,11 +30,47 @@ export function DashboardPage() {
     })
   }, [])
 
+  useSse<{ item: WorkItem }>({
+    eventName: 'workItemUpdated',
+    onEvent: ({ item: updated }) => {
+      setItems((prev) => {
+        const existing = prev.find((i) => i._id === updated._id)
+        if (!existing) return prev
+        if (existing.status !== updated.status) {
+          setDashboard((prevDashboard) => {
+            if (!prevDashboard) return prevDashboard
+            const porStatus = { ...prevDashboard.porStatus }
+            porStatus[existing.status] = Math.max(0, (porStatus[existing.status] || 0) - 1)
+            porStatus[updated.status] = (porStatus[updated.status] || 0) + 1
+            return { ...prevDashboard, porStatus }
+          })
+        }
+        return prev.map((i) => (i._id === updated._id ? updated : i))
+      })
+    },
+  })
+
   const atelierById = useMemo(() => new Map(ateliers.map((a) => [a._id, a])), [ateliers])
 
   const filtered = useMemo(() => {
+    const raw = search.trim().toLowerCase()
+    const dimsMatch = raw.match(/^(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)$/)
+    const q = raw.replace(/m$/, '')
+
     return items.filter((item) => {
-      if (search && !item.code.toLowerCase().includes(search.toLowerCase())) return false
+      if (raw) {
+        if (dimsMatch) {
+          const larguraQ = dimsMatch[1].replace(',', '.')
+          const comprimentoQ = dimsMatch[2].replace(',', '.')
+          const matchesLargura = String(item.specs.larguraBobina).includes(larguraQ)
+          const matchesComprimento = String(item.specs.comprimentoBobina).includes(comprimentoQ)
+          if (!matchesLargura || !matchesComprimento) return false
+        } else {
+          const matchesCode = item.code.toLowerCase().includes(q)
+          const matchesMedida = String(item.specs.larguraBobina).includes(q)
+          if (!matchesCode && !matchesMedida) return false
+        }
+      }
       if (statusFilter.length && !statusFilter.includes(item.status)) return false
       if (atelierFilter.length && !atelierFilter.includes(item.atelierId)) return false
       if (paymentFilter.length && (!item.paymentStatus || !paymentFilter.includes(item.paymentStatus))) return false
@@ -79,7 +116,7 @@ export function DashboardPage() {
           <FilterPopover label="Pagamento" options={paymentOptions} selected={paymentFilter} onChange={setPaymentFilter} />
         )}
         <div style={{ maxWidth: 260, marginLeft: 'auto' }}>
-          <SearchBox value={search} onChange={setSearch} placeholder="Buscar por código..." />
+          <SearchBox value={search} onChange={setSearch} placeholder="Buscar por código ou medida (ex: 4x3)..." />
         </div>
       </div>
 

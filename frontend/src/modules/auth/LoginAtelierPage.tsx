@@ -147,6 +147,8 @@ const inputStyle: CSSProperties = {
   border: '1.5px solid rgba(255,255,255,0.12)',
   background: 'rgba(255,255,255,0.06)',
   color: '#fff',
-  fontSize: '0.875rem',
+  // 16px avoids the automatic zoom-in that mobile Safari/Chrome trigger on
+  // input focus when the field's font-size is below that threshold.
+  fontSize: '16px',
   boxSizing: 'border-box',
 }

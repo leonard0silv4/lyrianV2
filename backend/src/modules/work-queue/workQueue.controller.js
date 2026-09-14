@@ -1,10 +1,12 @@
 const WorkItem = require("./workItem.model");
 const Atelier = require("../ateliers/atelier.model");
+const Measurement = require("../measurements/measurement.model");
 const auditService = require("../audit/audit.service");
 const { calculateMetrics } = require("./calculations");
-const { assertTransition, dateFieldFor, TransitionError } = require("./stateMachine");
+const { assertTransition, assertCooldown, dateFieldFor, TransitionError } = require("./stateMachine");
 const { stripFinancials, stripFinancialsList, isOwner } = require("./financialAccess");
 const { payItems, PaymentError } = require("../payments/payment.service");
+const sse = require("../realtime/sse.service");
 
 function scopeToAtelier(req, filter) {
   if (req.user.principalType === "atelier") {
@@ -39,14 +41,18 @@ async function create(req, res) {
     percentualSombreamento,
     corTecido,
     corHex,
+    measurementId,
     larguraBobina,
     comprimentoBobina,
     quantidadeFardo,
     emenda,
   } = req.body;
 
-  if (!atelierId || !percentualSombreamento || !corTecido || !larguraBobina || !comprimentoBobina || !quantidadeFardo) {
+  if (!atelierId || !percentualSombreamento || !corTecido || !quantidadeFardo) {
     return res.status(400).json({ message: "Campos obrigatorios da especificacao do lote ausentes" });
+  }
+  if (!measurementId && (larguraBobina === undefined || comprimentoBobina === undefined)) {
+    return res.status(400).json({ message: "Informe measurementId ou larguraBobina e comprimentoBobina" });
   }
 
   const atelier = await Atelier.findById(atelierId);
@@ -54,7 +60,24 @@ async function create(req, res) {
     return res.status(404).json({ message: "Atelie nao encontrado" });
   }
 
-  const metrics = calculateMetrics({ larguraBobina, comprimentoBobina, quantidadeFardo, emenda });
+  let measurement = null;
+  if (measurementId) {
+    measurement = await Measurement.findById(measurementId);
+    if (!measurement) {
+      return res.status(404).json({ message: "Medida nao encontrada" });
+    }
+  }
+
+  const resolvedLargura = larguraBobina !== undefined ? larguraBobina : measurement.larguraBobina;
+  const resolvedComprimento = comprimentoBobina !== undefined ? comprimentoBobina : measurement.comprimentoBobina;
+  const resolvedEmenda = emenda !== undefined ? Boolean(emenda) : measurement ? measurement.emendaPadrao : false;
+
+  const metrics = calculateMetrics({
+    larguraBobina: resolvedLargura,
+    comprimentoBobina: resolvedComprimento,
+    quantidadeFardo,
+    emenda: resolvedEmenda,
+  });
 
   const count = await WorkItem.countDocuments({ atelierId }).setOptions({ bypassMiddleware: true });
   const sequencial = String(count + 1).padStart(4, "0");
@@ -63,7 +86,16 @@ async function create(req, res) {
   const item = await WorkItem.create({
     atelierId,
     code,
-    specs: { percentualSombreamento, corTecido, corHex, larguraBobina, comprimentoBobina, quantidadeFardo, emenda: Boolean(emenda) },
+    specs: {
+      percentualSombreamento,
+      corTecido,
+      corHex,
+      measurementId: measurement?._id,
+      larguraBobina: resolvedLargura,
+      comprimentoBobina: resolvedComprimento,
+      quantidadeFardo,
+      emenda: resolvedEmenda,
+    },
     metrics,
     status: "criado",
     statusDates: { criadoEm: new Date() },
@@ -100,6 +132,12 @@ async function transition(req, res) {
       principal: req.user,
       isOwnAtelier: req.user.principalType === "atelier" && String(item.atelierId) === req.user.atelierId,
     });
+    assertCooldown({
+      currentStatus: item.status,
+      toStatus,
+      principal: req.user,
+      statusDates: item.statusDates,
+    });
   } catch (err) {
     if (err instanceof TransitionError) {
       return res.status(err.statusCode).json({ message: err.message });
@@ -134,6 +172,7 @@ async function transition(req, res) {
     oldValue: before,
     newValue: toStatus,
   });
+  sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json(stripFinancials(item, req.user));
 }
@@ -210,6 +249,7 @@ async function confirmByQr(req, res) {
     oldValue: before,
     newValue: toStatus,
   });
+  sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json({ alreadyConfirmed: false, item: stripFinancials(item, req.user) });
 }
@@ -235,6 +275,7 @@ async function updateObservacao(req, res) {
     oldValue: before,
     newValue: observacao,
   });
+  sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json(stripFinancials(item, req.user));
 }
@@ -361,7 +402,7 @@ async function rate(req, res) {
 }
 
 async function updateSpecs(req, res) {
-  const { larguraBobina, comprimentoBobina, quantidadeFardo, emenda } = req.body;
+  const { measurementId, larguraBobina, comprimentoBobina, quantidadeFardo, emenda } = req.body;
 
   const filter = scopeToAtelier(req, { _id: req.params.id });
   const item = await WorkItem.findOne(filter);
@@ -371,10 +412,26 @@ async function updateSpecs(req, res) {
 
   const before = { specs: item.specs.toObject(), metrics: item.metrics.toObject() };
 
+  let measurement = null;
+  if (measurementId !== undefined) {
+    if (measurementId) {
+      measurement = await Measurement.findById(measurementId);
+      if (!measurement) {
+        return res.status(404).json({ message: "Medida nao encontrada" });
+      }
+      item.specs.measurementId = measurement._id;
+    } else {
+      item.specs.measurementId = undefined;
+    }
+  }
+
   if (larguraBobina !== undefined) item.specs.larguraBobina = larguraBobina;
+  else if (measurement) item.specs.larguraBobina = measurement.larguraBobina;
   if (comprimentoBobina !== undefined) item.specs.comprimentoBobina = comprimentoBobina;
+  else if (measurement) item.specs.comprimentoBobina = measurement.comprimentoBobina;
   if (quantidadeFardo !== undefined) item.specs.quantidadeFardo = quantidadeFardo;
   if (emenda !== undefined) item.specs.emenda = Boolean(emenda);
+  else if (measurement) item.specs.emenda = measurement.emendaPadrao;
 
   item.metrics = calculateMetrics({
     larguraBobina: item.specs.larguraBobina,
@@ -453,15 +510,9 @@ async function revert(req, res) {
     field: "status",
     oldValue: before,
     newValue: toStatus,
+    reason: motivo,
   });
-  await auditService.record({
-    entityType: "WorkItem",
-    entityId: item._id,
-    user: req.user,
-    action: "update",
-    field: "observacao_reversao",
-    newValue: motivo,
-  });
+  sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json(stripFinancials(item, req.user));
 }

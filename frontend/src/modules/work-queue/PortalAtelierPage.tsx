@@ -4,6 +4,7 @@ import { workQueueApi, type WorkItem, type WorkItemStatus } from './workQueue.ap
 import { useAuth } from '../auth/AuthContext'
 import { NEXT_ACTION, atelierCanAdvance } from './stageFlow'
 import { PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
+import { useSse } from '../../shared/hooks/useSse'
 
 const TABS: Array<{ key: string; label: string; statuses?: WorkItemStatus[] }> = [
   { key: 'todos', label: 'Todos' },
@@ -41,6 +42,13 @@ export function PortalAtelierPage() {
   useEffect(() => {
     loadInitial()
   }, [])
+
+  useSse<{ item: WorkItem }>({
+    eventName: 'workItemUpdated',
+    onEvent: ({ item }) => {
+      setItems((prev) => (prev.some((i) => i._id === item._id) ? prev.map((i) => (i._id === item._id ? item : i)) : prev))
+    },
+  })
 
   const filtered = useMemo(() => {
     const activeTab = TABS.find((t) => t.key === tab)

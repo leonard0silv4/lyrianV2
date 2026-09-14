@@ -16,18 +16,33 @@ async function seed() {
       permissions: ALL_PERMISSIONS,
     });
     console.log("Role 'owner' criada");
+  } else {
+    const missing = ALL_PERMISSIONS.filter((p) => !ownerRole.permissions.includes(p));
+    if (missing.length) {
+      ownerRole.permissions = ALL_PERMISSIONS;
+      await ownerRole.save();
+      console.log(`Role 'owner' sincronizada com novas permissoes: ${missing.join(", ")}`);
+    }
   }
 
+  const adminPermissions = ALL_PERMISSIONS.filter(
+    (p) => p !== "users:manage" && p !== "roles:manage" && p !== "payments:manage"
+  );
   let adminRole = await Role.findOne({ name: "admin" });
   if (!adminRole) {
     adminRole = await Role.create({
       name: "admin",
       description: "Gestao operacional (sem gerenciar usuarios/roles)",
-      permissions: ALL_PERMISSIONS.filter(
-        (p) => p !== "users:manage" && p !== "roles:manage" && p !== "payments:manage"
-      ),
+      permissions: adminPermissions,
     });
     console.log("Role 'admin' criada");
+  } else {
+    const missing = adminPermissions.filter((p) => !adminRole.permissions.includes(p));
+    if (missing.length) {
+      adminRole.permissions = adminPermissions;
+      await adminRole.save();
+      console.log(`Role 'admin' sincronizada com novas permissoes: ${missing.join(", ")}`);
+    }
   }
 
   const username = process.env.SEED_OWNER_USERNAME || "owner";

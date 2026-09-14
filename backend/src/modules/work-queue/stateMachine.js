@@ -24,6 +24,8 @@ const WHO_CAN_TRANSITION = {
   "auditoria_divergente->auditoria_aprovada": [ROLE_ADMIN_OWNER],
 };
 
+const MIN_COSTURA_MS = 15 * 60 * 1000;
+
 const STATUS_DATE_FIELD = {
   em_atelie: "emAtelieEm",
   em_producao: "emProducaoEm",
@@ -68,11 +70,27 @@ function dateFieldFor(status) {
   return STATUS_DATE_FIELD[status];
 }
 
+function assertCooldown({ currentStatus, toStatus, principal, statusDates }) {
+  if (currentStatus !== "em_producao" || toStatus !== "pronto") return;
+  if (principal.principalType !== "atelier") return;
+
+  const startedAt = statusDates?.emProducaoEm;
+  const elapsedMs = startedAt ? Date.now() - new Date(startedAt).getTime() : Infinity;
+  if (elapsedMs < MIN_COSTURA_MS) {
+    const remainingMinutes = Math.ceil((MIN_COSTURA_MS - elapsedMs) / 60000);
+    throw new TransitionError(
+      `Aguarde mais ${remainingMinutes} minuto(s) para concluir o acabamento (minimo de 15 minutos em costura)`
+    );
+  }
+}
+
 module.exports = {
   ALLOWED_TRANSITIONS,
   WHO_CAN_TRANSITION,
+  MIN_COSTURA_MS,
   TransitionError,
   assertTransition,
+  assertCooldown,
   dateFieldFor,
   ROLE_ATELIER,
   ROLE_ADMIN_OWNER,

@@ -10,6 +10,7 @@ const auditLogSchema = new mongoose.Schema(
     field: { type: String },
     oldValue: { type: mongoose.Schema.Types.Mixed },
     newValue: { type: mongoose.Schema.Types.Mixed },
+    reason: { type: String },
     timestamp: { type: Date, default: Date.now },
   },
   { timestamps: false }

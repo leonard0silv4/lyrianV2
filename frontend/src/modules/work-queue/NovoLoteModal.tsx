@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Modal } from '../../shared/ui/Modal'
 import { StepChip, StepSelectorGroup } from '../../shared/ui/StepSelector'
 import { Button } from '../../shared/ui/Button'
 import { NumberInput } from '../../shared/ui/NumberInput'
+import { SearchBox } from '../../shared/ui/SearchBox'
 import type { Atelier } from '../ateliers/ateliers.api'
 import { workQueueApi } from './workQueue.api'
+import { measurementsApi, type Measurement } from '../measurements/measurements.api'
+import { filterMeasurements } from '../measurements/filterMeasurements'
+import { usePermission } from '../permissions/usePermission'
 
 const PERCENTUAIS = [80, 90, 95]
 const CORES = [
@@ -14,7 +18,6 @@ const CORES = [
   { nome: 'Verde', hex: '#059669' },
   { nome: 'Bege', hex: '#d4a373' },
 ]
-const LARGURAS = [2, 3, 4, 5, 6, 8]
 
 export function NovoLoteModal({
   atelier,
@@ -25,14 +28,40 @@ export function NovoLoteModal({
   onClose: () => void
   onCreated: () => void
 }) {
+  const { can } = usePermission()
   const [percentual, setPercentual] = useState(80)
   const [cor, setCor] = useState(CORES[0])
-  const [largura, setLargura] = useState(4)
-  const [comprimento, setComprimento] = useState(100)
+  const [measurements, setMeasurements] = useState<Measurement[]>([])
+  const [measurementsLoading, setMeasurementsLoading] = useState(true)
+  const [measurementSearch, setMeasurementSearch] = useState('')
+  const [measurementId, setMeasurementId] = useState('')
   const [quantidade, setQuantidade] = useState(10)
-  const [emenda, setEmenda] = useState(largura >= 5)
+  const [emenda, setEmenda] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    measurementsApi.list().then((data) => {
+      const ativas = data
+        .filter((m) => m.ativo)
+        .sort((a, b) => a.larguraBobina - b.larguraBobina || a.comprimentoBobina - b.comprimentoBobina)
+      setMeasurements(ativas)
+      if (ativas.length > 0) {
+        setMeasurementId(ativas[0]._id)
+        setEmenda(ativas[0].emendaPadrao)
+      }
+      setMeasurementsLoading(false)
+    })
+  }, [])
+
+  const measurement = measurements.find((m) => m._id === measurementId)
+  const largura = measurement?.larguraBobina ?? 0
+  const comprimento = measurement?.comprimentoBobina ?? 0
+
+  const filteredMeasurements = useMemo(
+    () => filterMeasurements(measurements, measurementSearch),
+    [measurements, measurementSearch]
+  )
 
   const preview = useMemo(() => {
     const totalMetros = emenda ? (largura * 2 + comprimento * 3) * quantidade : (largura * 2 + comprimento * 2) * quantidade
@@ -40,12 +69,13 @@ export function NovoLoteModal({
     return { totalMetros: Math.round(totalMetros * 100) / 100, qtdRolos: Math.round(qtdRolos * 100) / 100 }
   }, [largura, comprimento, quantidade, emenda])
 
-  function handleLargura(v: number) {
-    setLargura(v)
-    setEmenda(v >= 5)
+  function handleMeasurement(m: Measurement) {
+    setMeasurementId(m._id)
+    setEmenda(m.emendaPadrao)
   }
 
   async function handleSubmit() {
+    if (!measurement) return
     setError(null)
     setSaving(true)
     try {
@@ -54,8 +84,9 @@ export function NovoLoteModal({
         percentualSombreamento: percentual,
         corTecido: cor.nome,
         corHex: cor.hex,
-        larguraBobina: largura,
-        comprimentoBobina: comprimento,
+        measurementId: measurement._id,
+        larguraBobina: measurement.larguraBobina,
+        comprimentoBobina: measurement.comprimentoBobina,
         quantidadeFardo: quantidade,
         emenda,
       })
@@ -74,7 +105,7 @@ export function NovoLoteModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+          <Button variant="primary" onClick={handleSubmit} disabled={saving || !measurement}>
             {saving ? 'Emitindo...' : 'Emitir Lote'}
           </Button>
         </>
@@ -133,24 +164,55 @@ export function NovoLoteModal({
         ))}
       </StepSelectorGroup>
 
-      <StepSelectorGroup step={3} title="Largura da Bobina" currentLabel={`${largura}m${emenda ? ' (Com Emenda)' : ''}`}>
-        {LARGURAS.map((l) => (
-          <StepChip key={l} active={l === largura} onClick={() => handleLargura(l)}>
-            {l}m
-          </StepChip>
-        ))}
+      <StepSelectorGroup
+        step={3}
+        title="Medida (Largura x Comprimento)"
+        currentLabel={measurement ? `${measurement.larguraBobina}x${measurement.comprimentoBobina}m` : undefined}
+      >
+        {measurementsLoading ? (
+          <span className="lya-empty-state" style={{ padding: 0 }}>
+            Carregando medidas...
+          </span>
+        ) : measurements.length === 0 ? (
+          <span className="lya-form-error" style={{ margin: 0 }}>
+            Nenhuma medida ativa cadastrada.{' '}
+            {can('measurements:write') && (
+              <a href="/v2/medidas" style={{ color: 'var(--primary)' }}>
+                Cadastre em Medidas.
+              </a>
+            )}
+          </span>
+        ) : (
+          <div style={{ width: '100%' }}>
+            <div style={{ maxWidth: 220, marginBottom: '0.5rem' }}>
+              <SearchBox value={measurementSearch} onChange={setMeasurementSearch} placeholder="Buscar medida (ex: 4x3)..." />
+            </div>
+            {filteredMeasurements.length === 0 ? (
+              <p className="lya-empty-state" style={{ padding: '0.5rem 0' }}>
+                Nenhuma medida encontrada para "{measurementSearch}".
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: 160, overflowY: 'auto' }}>
+                {filteredMeasurements.map((m) => (
+                  <StepChip key={m._id} active={m._id === measurementId} onClick={() => handleMeasurement(m)}>
+                    {m.larguraBobina}x{m.comprimentoBobina}m
+                  </StepChip>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </StepSelectorGroup>
 
-      <StepSelectorGroup step={4} title="Comprimento e Quantidade">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', width: '100%' }}>
-          <div>
-            <label className="lya-label">Comprimento (m)</label>
-            <NumberInput value={comprimento} onChange={setComprimento} min={0} />
-          </div>
-          <div>
-            <label className="lya-label">Qtd. Telas no Fardo</label>
-            <NumberInput value={quantidade} onChange={setQuantidade} min={0} />
-          </div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem', marginBottom: '1rem' }}>
+        <input type="checkbox" className="lya-lote-checkbox" checked={emenda} onChange={(e) => setEmenda(e.target.checked)} />
+        Com Emenda
+      </label>
+
+      <StepSelectorGroup step={4} title="Quantidade">
+        <div style={{ width: '100%' }}>
+          <label className="lya-label">Qtd. Telas no Fardo</label>
+          <NumberInput value={quantidade} onChange={setQuantidade} min={0} />
         </div>
       </StepSelectorGroup>
 

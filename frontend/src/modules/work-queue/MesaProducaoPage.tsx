@@ -11,6 +11,7 @@ import { LoteCard } from './LoteCard'
 import { NovoLoteModal } from './NovoLoteModal'
 import { usePermission } from '../permissions/usePermission'
 import { NEXT_ACTION } from './stageFlow'
+import { useSse } from '../../shared/hooks/useSse'
 
 const TABS = [
   { key: 'todos', label: 'Todos' },
@@ -70,6 +71,14 @@ export function MesaProducaoPage() {
     loadInitial()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
+
+  useSse<{ item: WorkItem }>({
+    eventName: 'workItemUpdated',
+    onEvent: ({ item }) => {
+      if (item.atelierId !== id) return
+      setItems((prev) => (prev.some((i) => i._id === item._id) ? prev.map((i) => (i._id === item._id ? item : i)) : prev))
+    },
+  })
 
   const filtered = useMemo(() => {
     let list = items
@@ -210,7 +219,7 @@ export function MesaProducaoPage() {
           ))}
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          {!isOwner ? null : (
+          {!can('work-queue:write') ? null : (
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--gray-600)', cursor: 'pointer' }}>
               <input
                 type="checkbox"
@@ -263,7 +272,7 @@ export function MesaProducaoPage() {
               onAdvance={() => handleAdvance(item)}
               onReprocess={() => handleReprocess(item)}
               onUpdated={patchItem}
-              selectable={isOwner}
+              selectable={can('work-queue:write')}
               selected={selected.has(item._id)}
               onToggleSelect={() => toggleSelect(item._id)}
               atelierNome={atelier.nomeFantasia}

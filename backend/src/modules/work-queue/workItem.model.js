@@ -23,6 +23,7 @@ const workItemSchema = new mongoose.Schema(
       corTecido: { type: String, required: true },
       corHex: { type: String },
       larguraBobina: { type: Number, required: true },
+      measurementId: { type: mongoose.Schema.Types.ObjectId, ref: "Measurement" },
       comprimentoBobina: { type: Number, required: true },
       quantidadeFardo: { type: Number, required: true },
       emenda: { type: Boolean, default: false },

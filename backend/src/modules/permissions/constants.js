@@ -3,6 +3,8 @@ const PERMISSIONS = Object.freeze({
   ROLES_MANAGE: "roles:manage",
   ATELIERS_READ: "ateliers:read",
   ATELIERS_WRITE: "ateliers:write",
+  MEASUREMENTS_READ: "measurements:read",
+  MEASUREMENTS_WRITE: "measurements:write",
   WORK_QUEUE_READ: "work-queue:read",
   WORK_QUEUE_WRITE: "work-queue:write",
   WORK_QUEUE_ADVANCE: "work-queue:advance",

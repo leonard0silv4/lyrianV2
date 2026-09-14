@@ -5,6 +5,7 @@ import { LoginAtelierPage } from './modules/auth/LoginAtelierPage'
 import { PrivateRoute } from './shared/components/PrivateRoute'
 import { AppLayout } from './shared/components/AppLayout'
 import { AtelierListPage } from './modules/ateliers/AtelierListPage'
+import { MeasurementListPage } from './modules/measurements/MeasurementListPage'
 import { UsersPage } from './modules/users/UsersPage'
 import { RolesPage } from './modules/permissions/RolesPage'
 import { MesaProducaoPage } from './modules/work-queue/MesaProducaoPage'
@@ -13,6 +14,7 @@ import { PortalAtelierPage } from './modules/work-queue/PortalAtelierPage'
 import { PagamentoPage } from './modules/payments/PagamentoPage'
 import { PaymentsEntryPage } from './modules/payments/PaymentsEntryPage'
 import { ConfirmLotePage } from './modules/work-queue/ConfirmLotePage'
+import { LogsPage } from './modules/audit/LogsPage'
 
 function RootRedirect() {
   const { principal } = useAuth()
@@ -45,12 +47,20 @@ export function AppRouter() {
                 <Route path="/ateliers" element={<AtelierListPage />} />
               </Route>
 
+              <Route element={<PrivateRoute requiredPermission="measurements:read" />}>
+                <Route path="/medidas" element={<MeasurementListPage />} />
+              </Route>
+
               <Route element={<PrivateRoute requiredPermission="users:manage" />}>
                 <Route path="/usuarios" element={<UsersPage />} />
               </Route>
 
               <Route element={<PrivateRoute requiredPermission="roles:manage" />}>
                 <Route path="/papeis" element={<RolesPage />} />
+              </Route>
+
+              <Route element={<PrivateRoute requiredPermission="audit:read" />}>
+                <Route path="/logs" element={<LogsPage />} />
               </Route>
 
               <Route element={<PrivateRoute requiredPermission="payments:manage" />}>

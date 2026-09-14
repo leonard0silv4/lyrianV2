@@ -6,9 +6,11 @@ const authRoutes = require("./modules/auth/auth.routes");
 const usersRoutes = require("./modules/users/users.routes");
 const rolesRoutes = require("./modules/permissions/roles.routes");
 const ateliersRoutes = require("./modules/ateliers/ateliers.routes");
+const measurementsRoutes = require("./modules/measurements/measurements.routes");
 const auditRoutes = require("./modules/audit/audit.routes");
 const workQueueRoutes = require("./modules/work-queue/workQueue.routes");
 const paymentsRoutes = require("./modules/payments/payments.routes");
+const realtimeRoutes = require("./modules/realtime/realtime.routes");
 
 const app = express();
 
@@ -21,9 +23,11 @@ app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/roles", rolesRoutes);
 app.use("/ateliers", ateliersRoutes);
+app.use("/measurements", measurementsRoutes);
 app.use("/audit", auditRoutes);
 app.use("/work-queue", workQueueRoutes);
 app.use("/payments", paymentsRoutes);
+app.use("/events", realtimeRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);

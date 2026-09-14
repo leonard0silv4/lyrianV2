@@ -20,6 +20,7 @@ export type WorkItem = {
     percentualSombreamento: number
     corTecido: string
     corHex?: string
+    measurementId?: string
     larguraBobina: number
     comprimentoBobina: number
     quantidadeFardo: number
@@ -47,7 +48,8 @@ export type WorkItemInput = {
   percentualSombreamento: number
   corTecido: string
   corHex?: string
-  larguraBobina: number
+  measurementId?: string
+  larguraBobina?: number
   comprimentoBobina: number
   quantidadeFardo: number
   emenda: boolean
@@ -79,7 +81,13 @@ export const workQueueApi = {
     apiClient.post<WorkItem>(`/work-queue/${id}/rate`, { rating }).then((r) => r.data),
   updateSpecs: (
     id: string,
-    specs: { larguraBobina?: number; comprimentoBobina?: number; quantidadeFardo?: number; emenda?: boolean }
+    specs: {
+      measurementId?: string | null
+      larguraBobina?: number
+      comprimentoBobina?: number
+      quantidadeFardo?: number
+      emenda?: boolean
+    }
   ) => apiClient.put<WorkItem>(`/work-queue/${id}/specs`, specs).then((r) => r.data),
   setArchived: (id: string, isArchived: boolean) =>
     apiClient.patch<WorkItem>(`/work-queue/${id}/archive`, { isArchived }).then((r) => r.data),

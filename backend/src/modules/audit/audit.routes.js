@@ -1,15 +1,18 @@
 const express = require("express");
 const { requireAuth, requirePermission } = require("../../shared/middleware/auth");
 const { PERMISSIONS } = require("../permissions/constants");
-const { listByEntity } = require("./audit.service");
+const { list } = require("./audit.service");
 
 const router = express.Router();
 
 router.get("/", requireAuth, requirePermission(PERMISSIONS.AUDIT_READ), async (req, res) => {
-  const { entityType, entityId, page, limit } = req.query;
-  const result = await listByEntity({
+  const { entityType, entityId, action, dateFrom, dateTo, page, limit } = req.query;
+  const result = await list({
     entityType,
     entityId,
+    action,
+    dateFrom,
+    dateTo,
     page: page ? Number(page) : 1,
     limit: limit ? Number(limit) : 20,
   });
