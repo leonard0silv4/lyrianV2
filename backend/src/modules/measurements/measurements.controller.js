@@ -15,7 +15,7 @@ function duplicateKeyMessage(err) {
 }
 
 async function list(req, res) {
-  const measurements = await Measurement.find().sort({ larguraBobina: 1 });
+  const measurements = await Measurement.find().sort({ createdAt: -1 });
   res.json(measurements);
 }
 
