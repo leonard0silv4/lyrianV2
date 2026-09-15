@@ -109,7 +109,10 @@ export function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams])
 
+  const hasMore = items.length < total
+
   async function loadMore() {
+    if (loadingMore || !hasMore) return
     setLoadingMore(true)
     try {
       const next = page + 1
@@ -119,6 +122,26 @@ export function DashboardPage() {
       setPage(p.page)
     } finally {
       setLoadingMore(false)
+    }
+  }
+
+  // Dispara o carregamento automatico quando a pagina atual nao preenche o
+  // container (ex: poucos resultados apos filtro), ja que sem scrollbar o
+  // handler de onScroll nunca seria acionado.
+  useEffect(() => {
+    if (loading || loadingMore || !hasMore) return
+    const el = parentRef.current
+    if (el && el.scrollHeight <= el.clientHeight) {
+      loadMore()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, total, loading, loadingMore, hasMore])
+
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    if (loadingMore || !hasMore) return
+    const el = e.currentTarget
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) {
+      loadMore()
     }
   }
 
@@ -209,7 +232,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      <div ref={parentRef} style={{ overflow: 'auto', maxHeight: '70vh' }}>
+      <div ref={parentRef} onScroll={handleScroll} style={{ overflow: 'auto', maxHeight: '70vh' }}>
         <table className="lya-table">
           <thead>
             <tr>
@@ -248,15 +271,8 @@ export function DashboardPage() {
           </tbody>
         </table>
         {items.length === 0 && <p className="lya-empty-state">Nenhum lote encontrado.</p>}
+        {loadingMore && <p className="lya-empty-state">Carregando mais...</p>}
       </div>
-
-      {items.length < total && (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
-          <button className="lya-btn" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? 'Carregando...' : `Carregar mais (${items.length} de ${total})`}
-          </button>
-        </div>
-      )}
     </div>
   )
 }
