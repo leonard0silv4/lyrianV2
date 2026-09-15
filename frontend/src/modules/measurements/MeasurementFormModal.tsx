@@ -79,7 +79,17 @@ export function MeasurementFormModal({
         <p className="lya-empty-state">Carregando...</p>
       ) : (
         <form id="measurement-form" onSubmit={handleSubmit}>
-          <div className="lya-form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
+          <div>
+            <label className="lya-label">SKU (opcional)</label>
+            <input
+              className="lya-input"
+              value={form.sku}
+              onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+              placeholder="ex: TEC-4X3-AZUL"
+            />
+          </div>
+
+          <div className="lya-form-row" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '0.75rem' }}>
             <div>
               <label className="lya-label">Largura da Bobina (m)</label>
               <NumberInput
@@ -100,16 +110,6 @@ export function MeasurementFormModal({
                 required
               />
             </div>
-          </div>
-
-          <div style={{ marginTop: '0.75rem' }}>
-            <label className="lya-label">SKU (opcional)</label>
-            <input
-              className="lya-input"
-              value={form.sku}
-              onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
-              placeholder="ex: TEC-4X3-AZUL"
-            />
           </div>
 
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem', marginTop: '0.75rem' }}>
