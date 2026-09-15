@@ -65,7 +65,6 @@ const DashboardRow = memo(function DashboardRow({
 export function DashboardPage() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [items, setItems] = useState<WorkItem[]>([])
-  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [ateliers, setAteliers] = useState<Atelier[]>([])
   const [searchInput, setSearchInput] = useState('')
@@ -74,8 +73,10 @@ export function DashboardPage() {
   const [paymentFilter, setPaymentFilter] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const { isOwner } = usePermission()
   const parentRef = useRef<HTMLDivElement>(null)
+  const loadingMoreRef = useRef(false)
 
   const search = useDebouncedValue(searchInput, 300)
 
@@ -101,26 +102,32 @@ export function DashboardPage() {
     ]).then(([d, p, a]) => {
       setDashboard(d)
       setItems(p.items)
-      setTotal(p.total)
       setPage(1)
+      setHasMore(p.items.length === PAGE_SIZE && p.items.length < p.total)
       setAteliers(a)
       setLoading(false)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams])
 
-  const hasMore = items.length < total
-
   async function loadMore() {
-    if (loadingMore || !hasMore) return
+    // guarda por ref alem do state: onScroll pode disparar varias vezes no
+    // mesmo tick, antes do re-render que refletiria loadingMore = true.
+    if (loadingMoreRef.current || !hasMore) return
+    loadingMoreRef.current = true
     setLoadingMore(true)
     try {
       const next = page + 1
       const p = await workQueueApi.listPaged({ ...queryParams, page: next, limit: PAGE_SIZE })
-      setItems((prev) => [...prev, ...p.items])
-      setTotal(p.total)
+      setItems((prev) => (p.items.length > 0 ? [...prev, ...p.items] : prev))
       setPage(p.page)
+      // Confia no tamanho real da pagina recebida, nao so em `total`: se o
+      // backend devolver uma pagina parcial/vazia mesmo com total > itens
+      // carregados (contagem inconsistente), paramos o scroll infinito em
+      // vez de martelar a API para sempre.
+      setHasMore(p.items.length === PAGE_SIZE && items.length + p.items.length < p.total)
     } finally {
+      loadingMoreRef.current = false
       setLoadingMore(false)
     }
   }
@@ -135,7 +142,7 @@ export function DashboardPage() {
       loadMore()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, total, loading, loadingMore, hasMore])
+  }, [items, loading, loadingMore, hasMore])
 
   function handleScroll(e: React.UIEvent<HTMLDivElement>) {
     if (loadingMore || !hasMore) return
