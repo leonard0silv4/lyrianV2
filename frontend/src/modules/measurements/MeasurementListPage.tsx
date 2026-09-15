@@ -135,6 +135,10 @@ function MeasurementCard({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <span style={{ color: 'var(--gray-500)', fontWeight: 600 }}>SKU</span>
+          <span className="lya-mono">{measurement.sku || '—'}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
           <span style={{ color: 'var(--gray-500)', fontWeight: 600 }}>Emenda padrão</span>
           <span style={{ color: measurement.emendaPadrao ? 'var(--success)' : 'var(--gray-800)' }}>
             {measurement.emendaPadrao ? 'Sim' : 'Não'}

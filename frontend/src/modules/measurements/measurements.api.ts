@@ -5,6 +5,7 @@ export type Measurement = {
   larguraBobina: number
   comprimentoBobina: number
   unidade?: string
+  sku?: string
   emendaPadrao: boolean
   ativo: boolean
 }
@@ -13,6 +14,7 @@ export type MeasurementInput = {
   larguraBobina: number
   comprimentoBobina: number
   unidade?: string
+  sku?: string
   emendaPadrao: boolean
 }
 

@@ -21,5 +21,10 @@ export function filterMeasurements(measurements: Measurement[], rawQuery: string
   }
 
   const q = raw.replace(/m$/, '')
-  return measurements.filter((m) => String(m.larguraBobina).includes(q) || String(m.comprimentoBobina).includes(q))
+  return measurements.filter(
+    (m) =>
+      String(m.larguraBobina).includes(q) ||
+      String(m.comprimentoBobina).includes(q) ||
+      Boolean(m.sku && m.sku.toLowerCase().includes(raw))
+  )
 }

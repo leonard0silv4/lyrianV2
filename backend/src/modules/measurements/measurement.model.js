@@ -5,6 +5,7 @@ const measurementSchema = new mongoose.Schema(
     larguraBobina: { type: Number, required: true },
     comprimentoBobina: { type: Number, required: true },
     unidade: { type: String, default: "m" },
+    sku: { type: String },
     emendaPadrao: { type: Boolean, default: false },
     ativo: { type: Boolean, default: true },
   },
@@ -12,5 +13,6 @@ const measurementSchema = new mongoose.Schema(
 );
 
 measurementSchema.index({ larguraBobina: 1, comprimentoBobina: 1 }, { unique: true });
+measurementSchema.index({ sku: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Measurement", measurementSchema);

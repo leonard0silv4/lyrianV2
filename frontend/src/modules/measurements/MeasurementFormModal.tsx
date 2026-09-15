@@ -8,6 +8,7 @@ const EMPTY: MeasurementInput = {
   larguraBobina: 0,
   comprimentoBobina: 0,
   unidade: 'm',
+  sku: '',
   emendaPadrao: false,
 }
 
@@ -33,6 +34,7 @@ export function MeasurementFormModal({
           larguraBobina: m.larguraBobina,
           comprimentoBobina: m.comprimentoBobina,
           unidade: m.unidade || 'm',
+          sku: m.sku || '',
           emendaPadrao: m.emendaPadrao,
         })
         setLoaded(true)
@@ -100,7 +102,17 @@ export function MeasurementFormModal({
             </div>
           </div>
 
-          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem' }}>
+          <div style={{ marginTop: '0.75rem' }}>
+            <label className="lya-label">SKU (opcional)</label>
+            <input
+              className="lya-input"
+              value={form.sku}
+              onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+              placeholder="ex: TEC-4X3-AZUL"
+            />
+          </div>
+
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8125rem', marginTop: '0.75rem' }}>
             <input
               type="checkbox"
               className="lya-lote-checkbox"
