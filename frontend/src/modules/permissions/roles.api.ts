@@ -27,6 +27,20 @@ export const PERMISSION_LABELS: Record<string, string> = {
   'payments:manage': 'Gerenciar pagamentos (valores, bônus, quitação)',
 }
 
+export const PERMISSION_CATEGORY_META: Record<string, { label: string; icon: string; color: string }> = {
+  users: { label: 'Usuários', icon: 'fa-solid fa-user-gear', color: 'var(--primary)' },
+  roles: { label: 'Papéis', icon: 'fa-solid fa-user-shield', color: '#6d28d9' },
+  ateliers: { label: 'Ateliês', icon: 'fa-solid fa-store', color: '#b45309' },
+  measurements: { label: 'Medidas', icon: 'fa-solid fa-ruler-combined', color: '#0f766e' },
+  'work-queue': { label: 'Fila de Produção', icon: 'fa-solid fa-diagram-project', color: '#4338ca' },
+  audit: { label: 'Auditoria', icon: 'fa-solid fa-clipboard-list', color: 'var(--gray-600)' },
+  payments: { label: 'Pagamentos', icon: 'fa-solid fa-sack-dollar', color: '#047857' },
+}
+
+export function permissionCategory(perm: string): string {
+  return perm.split(':')[0]
+}
+
 export const rolesApi = {
   listPermissions: () => apiClient.get<string[]>('/roles/permissions').then((r) => r.data),
   list: () => apiClient.get<Role[]>('/roles').then((r) => r.data),

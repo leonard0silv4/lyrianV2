@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ateliersApi, type Atelier } from '../ateliers/ateliers.api'
 import { workQueueApi, type WorkItem } from './workQueue.api'
@@ -12,6 +12,7 @@ import { NovoLoteModal } from './NovoLoteModal'
 import { usePermission } from '../permissions/usePermission'
 import { NEXT_ACTION } from './stageFlow'
 import { useSse } from '../../shared/hooks/useSse'
+import { VirtualCardGrid } from '../../shared/ui/VirtualCardGrid'
 
 const TABS = [
   { key: 'todos', label: 'Todos' },
@@ -63,9 +64,19 @@ export function MesaProducaoPage() {
     workQueueApi.list({ atelierId: id }).then(setItems)
   }
 
-  function patchItem(updated: WorkItem) {
-    setItems((prev) => prev.map((i) => (i._id === updated._id ? updated : i)))
-  }
+  // Substitui a referencia do item somente quando o conteudo realmente muda,
+  // para nao disparar re-render de todos os LoteCards (memoizados) a cada
+  // evento SSE que apenas confirma um estado ja conhecido.
+  const patchItem = useCallback((updated: WorkItem) => {
+    setItems((prev) => {
+      const index = prev.findIndex((i) => i._id === updated._id)
+      if (index === -1) return prev
+      if (JSON.stringify(prev[index]) === JSON.stringify(updated)) return prev
+      const next = prev.slice()
+      next[index] = updated
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     loadInitial()
@@ -76,7 +87,7 @@ export function MesaProducaoPage() {
     eventName: 'workItemUpdated',
     onEvent: ({ item }) => {
       if (item.atelierId !== id) return
-      setItems((prev) => (prev.some((i) => i._id === item._id) ? prev.map((i) => (i._id === item._id ? item : i)) : prev))
+      patchItem(item)
     },
   })
 
@@ -99,34 +110,40 @@ export function MesaProducaoPage() {
     }
   }, [items])
 
-  async function handleAdvance(item: WorkItem) {
-    const action = NEXT_ACTION[item.status]
-    if (!action) return
-    try {
-      const updated = await workQueueApi.transition(item._id, action.toStatus)
-      patchItem(updated)
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível avançar a etapa')
-    }
-  }
+  const handleAdvance = useCallback(
+    async (item: WorkItem) => {
+      const action = NEXT_ACTION[item.status]
+      if (!action) return
+      try {
+        const updated = await workQueueApi.transition(item._id, action.toStatus)
+        patchItem(updated)
+      } catch (err: any) {
+        alert(err.response?.data?.message || 'Não foi possível avançar a etapa')
+      }
+    },
+    [patchItem]
+  )
 
-  async function handleReprocess(item: WorkItem) {
-    try {
-      const updated = await workQueueApi.transition(item._id, 'em_producao')
-      patchItem(updated)
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível reprocessar')
-    }
-  }
+  const handleReprocess = useCallback(
+    async (item: WorkItem) => {
+      try {
+        const updated = await workQueueApi.transition(item._id, 'em_producao')
+        patchItem(updated)
+      } catch (err: any) {
+        alert(err.response?.data?.message || 'Não foi possível reprocessar')
+      }
+    },
+    [patchItem]
+  )
 
-  function toggleSelect(id: string) {
+  const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
       else next.add(id)
       return next
     })
-  }
+  }, [])
 
   function toggleSelectAllVisible() {
     setSelected((prev) => {
@@ -261,25 +278,23 @@ export function MesaProducaoPage() {
         </div>
       )}
 
-      {filtered.length === 0 ? (
-        <p className="lya-empty-state">Nenhum lote encontrado.</p>
-      ) : (
-        <div className="lya-grid-cards">
-          {filtered.map((item) => (
-            <LoteCard
-              key={item._id}
-              item={item}
-              onAdvance={() => handleAdvance(item)}
-              onReprocess={() => handleReprocess(item)}
-              onUpdated={patchItem}
-              selectable={can('work-queue:write')}
-              selected={selected.has(item._id)}
-              onToggleSelect={() => toggleSelect(item._id)}
-              atelierNome={atelier.nomeFantasia}
-            />
-          ))}
-        </div>
-      )}
+      <VirtualCardGrid
+        items={filtered}
+        keyExtractor={(item) => item._id}
+        emptyState={<p className="lya-empty-state">Nenhum lote encontrado.</p>}
+        renderItem={(item) => (
+          <LoteCard
+            item={item}
+            onAdvance={handleAdvance}
+            onReprocess={handleReprocess}
+            onUpdated={patchItem}
+            selectable={can('work-queue:write')}
+            selected={selected.has(item._id)}
+            onToggleSelect={toggleSelect}
+            atelierNome={atelier.nomeFantasia}
+          />
+        )}
+      />
 
       {showModal && (
         <NovoLoteModal

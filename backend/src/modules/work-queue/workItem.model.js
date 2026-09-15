@@ -67,6 +67,8 @@ workItemSchema.pre(/^find/, function (next) {
   next();
 });
 
+workItemSchema.index({ atelierId: 1, isArchived: 1, priority: -1, createdAt: -1 });
+
 module.exports = mongoose.model("WorkItem", workItemSchema);
 module.exports.STATUS_VALUES = STATUS_VALUES;
 module.exports.PAYMENT_STATUS_VALUES = PAYMENT_STATUS_VALUES;

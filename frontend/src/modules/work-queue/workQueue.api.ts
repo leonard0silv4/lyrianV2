@@ -63,9 +63,24 @@ export type DashboardData = {
   pagamento?: { lotesLiberados: number; metrosLiberados: number; valorLiberado: number }
 }
 
+export type WorkQueueListParams = {
+  atelierId?: string
+  status?: string
+  paymentStatus?: string
+  q?: string
+}
+
+export type WorkQueuePage = {
+  items: WorkItem[]
+  total: number
+  page: number
+  limit: number
+}
+
 export const workQueueApi = {
-  list: (params?: { atelierId?: string; status?: string }) =>
-    apiClient.get<WorkItem[]>('/work-queue', { params }).then((r) => r.data),
+  list: (params?: WorkQueueListParams) => apiClient.get<WorkItem[]>('/work-queue', { params }).then((r) => r.data),
+  listPaged: (params: WorkQueueListParams & { page: number; limit: number }) =>
+    apiClient.get<WorkQueuePage>('/work-queue', { params }).then((r) => r.data),
   get: (id: string) => apiClient.get<WorkItem>(`/work-queue/${id}`).then((r) => r.data),
   create: (data: WorkItemInput) => apiClient.post<WorkItem>('/work-queue', data).then((r) => r.data),
   transition: (id: string, toStatus: WorkItemStatus, observacao?: string) =>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Badge, PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
 import { ChecklistRow } from '../../shared/ui/ChecklistRow'
 import { CHECKLIST_STEPS, NEXT_ACTION, atelierCanAdvance, isStepDone, previousStatus } from './stageFlow'
@@ -17,7 +17,7 @@ const ACTION_CLASS: Record<string, string> = {
   pronto: 'pronto',
 }
 
-export function LoteCard({
+export const LoteCard = memo(function LoteCard({
   item,
   onAdvance,
   onReprocess,
@@ -28,12 +28,12 @@ export function LoteCard({
   atelierNome,
 }: {
   item: WorkItem
-  onAdvance: () => void
-  onReprocess?: () => void
+  onAdvance: (item: WorkItem) => void
+  onReprocess?: (item: WorkItem) => void
   onUpdated?: (updated: WorkItem) => void
   selectable?: boolean
   selected?: boolean
-  onToggleSelect?: () => void
+  onToggleSelect?: (id: string) => void
   atelierNome?: string
 }) {
   const { isOwner, isAtelier } = usePermission()
@@ -58,7 +58,12 @@ export function LoteCard({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem', gap: '0.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           {selectable && (
-            <input type="checkbox" className="lya-lote-checkbox" checked={Boolean(selected)} onChange={onToggleSelect} />
+            <input
+              type="checkbox"
+              className="lya-lote-checkbox"
+              checked={Boolean(selected)}
+              onChange={() => onToggleSelect?.(item._id)}
+            />
           )}
           <span className="lya-mono" style={{ fontWeight: 700, fontSize: '0.9375rem' }}>
             {item.code}
@@ -148,13 +153,13 @@ export function LoteCard({
       )}
 
       {isDivergente && onReprocess && !isAtelier ? (
-        <button className="lya-lote-action-btn danger" onClick={onReprocess}>
+        <button className="lya-lote-action-btn danger" onClick={() => onReprocess(item)}>
           <i className="fa-solid fa-rotate-left" /> Reprocessar
         </button>
       ) : action && canShowAction ? (
         <button
           className={`lya-lote-action-btn ${ACTION_CLASS[action.toStatus] || ''}`.trim()}
-          onClick={onAdvance}
+          onClick={() => onAdvance(item)}
         >
           <i className={`fa-solid ${action.icon}`} /> {action.label}
         </button>
@@ -204,4 +209,4 @@ export function LoteCard({
       )}
     </div>
   )
-}
+})

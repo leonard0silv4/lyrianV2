@@ -15,14 +15,92 @@ function scopeToAtelier(req, filter) {
   return filter;
 }
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// FilterPopover no frontend permite selecionar varios valores; o cliente
+// manda esses valores concatenados por virgula num unico query param.
+function toFilterValue(raw) {
+  if (!raw) return undefined;
+  const values = String(raw)
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+  if (values.length === 0) return undefined;
+  return values.length === 1 ? values[0] : { $in: values };
+}
+
+// Mesma logica de busca por codigo ou dimensao (ex.: "4x3") usada no filtro client-side
+// do DashboardPage; replicada aqui via $expr/$regexMatch para poder rodar no servidor.
+function applySearch(filter, q) {
+  const raw = q.trim().toLowerCase();
+  if (!raw) return filter;
+
+  const dimsMatch = raw.match(/^(\d+(?:[.,]\d+)?)\s*x\s*(\d+(?:[.,]\d+)?)$/);
+  if (dimsMatch) {
+    const larguraQ = escapeRegex(dimsMatch[1].replace(",", "."));
+    const comprimentoQ = escapeRegex(dimsMatch[2].replace(",", "."));
+    return {
+      ...filter,
+      $expr: {
+        $and: [
+          { $regexMatch: { input: { $toString: "$specs.larguraBobina" }, regex: larguraQ } },
+          { $regexMatch: { input: { $toString: "$specs.comprimentoBobina" }, regex: comprimentoQ } },
+        ],
+      },
+    };
+  }
+
+  const term = escapeRegex(raw.replace(/m$/, ""));
+  return {
+    ...filter,
+    $or: [
+      { code: { $regex: term, $options: "i" } },
+      { $expr: { $regexMatch: { input: { $toString: "$specs.larguraBobina" }, regex: term } } },
+    ],
+  };
+}
+
+const LIST_SAFETY_LIMIT = 1000;
+const MAX_PAGE_SIZE = 200;
+
 async function list(req, res) {
-  const { atelierId, status } = req.query;
+  const { atelierId, status, paymentStatus, q, page, limit } = req.query;
   let filter = {};
-  if (atelierId) filter.atelierId = atelierId;
-  if (status) filter.status = status;
+  const atelierIdFilter = toFilterValue(atelierId);
+  if (atelierIdFilter) filter.atelierId = atelierIdFilter;
+  const statusFilter = toFilterValue(status);
+  if (statusFilter) filter.status = statusFilter;
+  const paymentStatusFilter = toFilterValue(paymentStatus);
+  if (paymentStatusFilter) filter.paymentStatus = paymentStatusFilter;
+  if (q) filter = applySearch(filter, q);
   filter = scopeToAtelier(req, filter);
 
-  const items = await WorkItem.find(filter).sort({ priority: -1, createdAt: -1 });
+  const sort = { priority: -1, createdAt: -1 };
+
+  if (page) {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(limit, 10) || 50));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [items, total] = await Promise.all([
+      WorkItem.find(filter).sort(sort).skip(skip).limit(limitNum),
+      WorkItem.countDocuments(filter),
+    ]);
+
+    return res.json({
+      items: stripFinancialsList(items, req.user),
+      total,
+      page: pageNum,
+      limit: limitNum,
+    });
+  }
+
+  // Sem paginacao explicita: mantem o array puro (contrato atual, usado por
+  // MesaProducaoPage/PagamentoPage/PortalAtelierPage), mas com um teto de
+  // seguranca para nunca devolver uma colecao sem limite nenhum.
+  const items = await WorkItem.find(filter).sort(sort).limit(LIST_SAFETY_LIMIT);
   res.json(stripFinancialsList(items, req.user));
 }
 
