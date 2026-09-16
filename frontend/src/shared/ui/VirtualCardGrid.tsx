@@ -59,39 +59,45 @@ export function VirtualCardGrid<T>({
     overscan: 3,
   })
 
-  if (items.length === 0) {
-    return <>{emptyState}</>
-  }
-
+  // O container abaixo (com o ref usado para medir a largura via ResizeObserver)
+  // precisa ficar sempre montado, mesmo com a lista vazia. Antes, esse caso
+  // retornava so o emptyState mais cedo, entao o primeiro item que aparecia
+  // (ex.: apos criar o unico lote do ateliê) montava o container pela primeira
+  // vez SEM disparar o effect de novo (suas deps sao so gap/minColumnWidth),
+  // ficando com "columns" no valor inicial (1) ate um F5 remontar tudo do zero.
   return (
     <div ref={scrollRef} style={{ maxHeight, overflowY: 'auto' }}>
-      <div style={{ position: 'relative', height: rowVirtualizer.getTotalSize(), width: '100%' }}>
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = rows[virtualRow.index]
-          return (
-            <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
-              ref={rowVirtualizer.measureElement}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualRow.start}px)`,
-                display: 'grid',
-                gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                gap,
-                paddingBottom: gap,
-              }}
-            >
-              {row.map((item) => (
-                <div key={keyExtractor(item)}>{renderItem(item)}</div>
-              ))}
-            </div>
-          )
-        })}
-      </div>
+      {items.length === 0 ? (
+        emptyState
+      ) : (
+        <div style={{ position: 'relative', height: rowVirtualizer.getTotalSize(), width: '100%' }}>
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = rows[virtualRow.index]
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualRow.start}px)`,
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                  gap,
+                  paddingBottom: gap,
+                }}
+              >
+                {row.map((item) => (
+                  <div key={keyExtractor(item)}>{renderItem(item)}</div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

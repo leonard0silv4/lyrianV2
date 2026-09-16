@@ -14,6 +14,7 @@ import { PortalAtelierPage } from './modules/work-queue/PortalAtelierPage'
 import { PagamentoPage } from './modules/payments/PagamentoPage'
 import { PaymentsEntryPage } from './modules/payments/PaymentsEntryPage'
 import { ConfirmLotePage } from './modules/work-queue/ConfirmLotePage'
+import { AuditoriaPage } from './modules/work-queue/AuditoriaPage'
 import { LogsPage } from './modules/audit/LogsPage'
 
 function RootRedirect() {
@@ -41,6 +42,10 @@ export function AppRouter() {
               <Route element={<PrivateRoute requiredPermission="work-queue:read" />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/ateliers/:id/mesa" element={<MesaProducaoPage />} />
+              </Route>
+
+              <Route element={<PrivateRoute requiredPermission="work-queue:baselinker-push" />}>
+                <Route path="/auditoria" element={<AuditoriaPage />} />
               </Route>
 
               <Route element={<PrivateRoute requiredPermission="ateliers:read" />}>

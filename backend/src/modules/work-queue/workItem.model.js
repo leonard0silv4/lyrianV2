@@ -13,6 +13,8 @@ const STATUS_VALUES = [
 
 const PAYMENT_STATUS_VALUES = ["pendente", "liberado", "pago"];
 
+const ESTOQUE_BASELINKER_STATUS = ["pendente", "lancado", "erro"];
+
 const workItemSchema = new mongoose.Schema(
   {
     atelierId: { type: mongoose.Schema.Types.ObjectId, ref: "Atelier", required: true },
@@ -51,6 +53,18 @@ const workItemSchema = new mongoose.Schema(
     bonus: { type: Number, default: 0 },
     advancedMoneyPayment: { type: Number, default: 0 },
 
+    // Quantidade real de pecas apuradas na auditoria fisica do barracao
+    // (pode divergir de specs.quantidadeFardo, que e o planejado na emissao).
+    quantidadeAuditada: { type: Number },
+
+    estoqueBaseLinker: {
+      status: { type: String, enum: ESTOQUE_BASELINKER_STATUS, default: "pendente" },
+      quantidadeEnviada: { type: Number },
+      baseLinkerProductId: { type: String },
+      lancadoEm: { type: Date },
+      ultimoErro: { type: String },
+    },
+
     priority: { type: Number, default: 0 },
     observacao: { type: String },
     rating: { type: Number, min: 1, max: 5 },
@@ -72,3 +86,4 @@ workItemSchema.index({ atelierId: 1, isArchived: 1, priority: -1, createdAt: -1 
 module.exports = mongoose.model("WorkItem", workItemSchema);
 module.exports.STATUS_VALUES = STATUS_VALUES;
 module.exports.PAYMENT_STATUS_VALUES = PAYMENT_STATUS_VALUES;
+module.exports.ESTOQUE_BASELINKER_STATUS = ESTOQUE_BASELINKER_STATUS;

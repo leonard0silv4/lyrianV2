@@ -14,6 +14,11 @@ router.get("/", requirePermission(PERMISSIONS.WORK_QUEUE_READ), controller.list)
 router.get("/:id", requirePermission(PERMISSIONS.WORK_QUEUE_READ), controller.getById);
 router.post("/", requirePermission(PERMISSIONS.WORK_QUEUE_WRITE), controller.create);
 router.post("/:id/transition", requirePermission(PERMISSIONS.WORK_QUEUE_ADVANCE), controller.transition);
+router.post(
+  "/:id/lancar-estoque",
+  requirePermission(PERMISSIONS.WORK_QUEUE_BASELINKER_PUSH),
+  controller.lancarEstoque
+);
 router.post("/:id/confirm-qr", requirePermission(PERMISSIONS.WORK_QUEUE_ADVANCE), controller.confirmByQr);
 router.put("/:id/observacao", requirePermission(PERMISSIONS.WORK_QUEUE_ADVANCE), controller.updateObservacao);
 router.post("/:id/pay", requirePermission(PERMISSIONS.PAYMENTS_MANAGE), controller.pay);

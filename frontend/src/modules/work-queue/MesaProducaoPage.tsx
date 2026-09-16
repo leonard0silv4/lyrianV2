@@ -66,11 +66,18 @@ export function MesaProducaoPage() {
 
   // Substitui a referencia do item somente quando o conteudo realmente muda,
   // para nao disparar re-render de todos os LoteCards (memoizados) a cada
-  // evento SSE que apenas confirma um estado ja conhecido.
+  // evento SSE que apenas confirma um estado ja conhecido. Lote arquivado sai
+  // da lista na hora (a listagem do servidor ja exclui arquivados, entao manter
+  // o card na tela ate o proximo F5 destoava do restante da aplicacao).
   const patchItem = useCallback((updated: WorkItem) => {
     setItems((prev) => {
       const index = prev.findIndex((i) => i._id === updated._id)
       if (index === -1) return prev
+      if (updated.isArchived) {
+        const next = prev.slice()
+        next.splice(index, 1)
+        return next
+      }
       if (JSON.stringify(prev[index]) === JSON.stringify(updated)) return prev
       const next = prev.slice()
       next[index] = updated

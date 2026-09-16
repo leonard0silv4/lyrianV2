@@ -160,6 +160,19 @@ export function DashboardPage() {
       const index = prev.findIndex((i) => i._id === updated._id)
       if (index === -1) return prev
       const existing = prev[index]
+
+      if (updated.isArchived) {
+        setDashboard((prevDashboard) => {
+          if (!prevDashboard) return prevDashboard
+          const porStatus = { ...prevDashboard.porStatus }
+          porStatus[existing.status] = Math.max(0, (porStatus[existing.status] || 0) - 1)
+          return { ...prevDashboard, porStatus, totalLotes: Math.max(0, prevDashboard.totalLotes - 1) }
+        })
+        const next = prev.slice()
+        next.splice(index, 1)
+        return next
+      }
+
       if (JSON.stringify(existing) === JSON.stringify(updated)) return prev
 
       if (existing.status !== updated.status) {

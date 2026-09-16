@@ -7,9 +7,14 @@ const ALLOWED_TRANSITIONS = {
   em_producao: ["pronto"],
   pronto: ["coletado"],
   coletado: ["descarregado"],
+  // auditoria_aprovada e auditoria_divergente permitem se re-auditar (inclusive
+  // para o proprio status, corrigindo qtd/observacao) enquanto o lote ainda nao
+  // foi lancado no BaseLinker — o controller de transition() bloqueia essa
+  // reauditoria explicitamente quando estoqueBaseLinker.status ja e "lancado",
+  // pra nao deixar a quantidade divergir do que ja foi sincronizado na loja.
   descarregado: ["auditoria_aprovada", "auditoria_divergente"],
-  auditoria_divergente: ["em_producao", "auditoria_aprovada"],
-  auditoria_aprovada: [],
+  auditoria_divergente: ["em_producao", "auditoria_aprovada", "auditoria_divergente"],
+  auditoria_aprovada: ["auditoria_divergente", "auditoria_aprovada"],
 };
 
 const WHO_CAN_TRANSITION = {
@@ -22,6 +27,9 @@ const WHO_CAN_TRANSITION = {
   "descarregado->auditoria_divergente": [ROLE_ADMIN_OWNER],
   "auditoria_divergente->em_producao": [ROLE_ADMIN_OWNER],
   "auditoria_divergente->auditoria_aprovada": [ROLE_ADMIN_OWNER],
+  "auditoria_divergente->auditoria_divergente": [ROLE_ADMIN_OWNER],
+  "auditoria_aprovada->auditoria_divergente": [ROLE_ADMIN_OWNER],
+  "auditoria_aprovada->auditoria_aprovada": [ROLE_ADMIN_OWNER],
 };
 
 const MIN_COSTURA_MS = 15 * 60 * 1000;

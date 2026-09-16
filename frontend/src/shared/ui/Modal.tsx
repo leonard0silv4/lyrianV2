@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 export function Modal({
   title,
@@ -21,7 +22,12 @@ export function Modal({
   maxWidth?: number
   noScroll?: boolean
 }) {
-  return (
+  // Renderizado via portal direto em document.body: cards de listas virtualizadas
+  // (VirtualCardGrid/DashboardPage) usam `transform` nas linhas para posicionar o
+  // scroll, e isso cria um novo containing block para descendentes `position: fixed`.
+  // Sem o portal, o overlay ficava restrito às dimensões daquele card/linha
+  // (sombra cortada, modal preso no centro do card) em vez de cobrir a tela toda.
+  return createPortal(
     <div className="lya-modal-overlay" onClick={onClose}>
       <div
         className="lya-modal"
@@ -54,6 +60,7 @@ export function Modal({
         </div>
         {footer && <div className="lya-modal-footer">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

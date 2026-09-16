@@ -16,10 +16,24 @@ async function getDashboard(req, res) {
     matchFilter.atelierId = new mongoose.Types.ObjectId(req.user.atelierId);
   }
 
-  const [statusRows, atelierRows, totalsRow] = await Promise.all([
+  const AUDITORIA_STATUSES = ["descarregado", "auditoria_aprovada", "auditoria_divergente"];
+
+  const [statusRows, auditoriaRows, atelierRows, totalsRow] = await Promise.all([
     WorkItem.aggregate([
       { $match: matchFilter },
       { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    // Conta os 4 estados "visiveis" da tela de Auditoria (que combinam o status
+    // do lote com o status do lancamento no BaseLinker num unico contador cada),
+    // pra os KPIs da tela nao precisarem inferir isso a partir da lista paginada.
+    WorkItem.aggregate([
+      { $match: { ...matchFilter, status: { $in: AUDITORIA_STATUSES } } },
+      {
+        $group: {
+          _id: { status: "$status", estoqueStatus: { $ifNull: ["$estoqueBaseLinker.status", "pendente"] } },
+          count: { $sum: 1 },
+        },
+      },
     ]),
     WorkItem.aggregate([
       { $match: matchFilter },
@@ -55,6 +69,20 @@ async function getDashboard(req, res) {
     porStatus[row._id] = row.count;
   }
 
+  const auditoria = { aguardando: 0, conforme: 0, divergente: 0, lancadoEstoque: 0 };
+  for (const row of auditoriaRows) {
+    const { status, estoqueStatus } = row._id;
+    if (estoqueStatus === "lancado") {
+      auditoria.lancadoEstoque += row.count;
+    } else if (status === "descarregado") {
+      auditoria.aguardando += row.count;
+    } else if (status === "auditoria_aprovada") {
+      auditoria.conforme += row.count;
+    } else if (status === "auditoria_divergente") {
+      auditoria.divergente += row.count;
+    }
+  }
+
   const ateliers = atelierRows.length
     ? await Atelier.find({ _id: { $in: atelierRows.map((row) => row._id) } }, "nomeFantasia siglaLote")
     : [];
@@ -78,6 +106,7 @@ async function getDashboard(req, res) {
     totalMetros: round2(totals.totalMetros),
     porStatus,
     porAtelier,
+    auditoria,
   };
 
   if (isOwner(req.user)) {

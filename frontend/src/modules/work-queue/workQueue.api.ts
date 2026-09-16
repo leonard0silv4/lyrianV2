@@ -12,6 +12,8 @@ export type WorkItemStatus =
 
 export type PaymentStatus = 'pendente' | 'liberado' | 'pago'
 
+export type EstoqueBaseLinkerStatus = 'pendente' | 'lancado' | 'erro'
+
 export type WorkItem = {
   _id: string
   atelierId: string
@@ -41,6 +43,15 @@ export type WorkItem = {
   rating?: number
   priority: number
   createdAt: string
+  isArchived?: boolean
+  quantidadeAuditada?: number
+  estoqueBaseLinker?: {
+    status: EstoqueBaseLinkerStatus
+    quantidadeEnviada?: number
+    baseLinkerProductId?: string
+    lancadoEm?: string
+    ultimoErro?: string
+  }
 }
 
 export type WorkItemInput = {
@@ -61,12 +72,14 @@ export type DashboardData = {
   porStatus: Record<string, number>
   porAtelier: Array<{ atelierId: string; nomeFantasia?: string; siglaLote?: string; totalLotes: number; totalMetros: number }>
   pagamento?: { lotesLiberados: number; metrosLiberados: number; valorLiberado: number }
+  auditoria: { aguardando: number; conforme: number; divergente: number; lancadoEstoque: number }
 }
 
 export type WorkQueueListParams = {
   atelierId?: string
   status?: string
   paymentStatus?: string
+  estoqueStatus?: string
   q?: string
 }
 
@@ -85,6 +98,10 @@ export const workQueueApi = {
   create: (data: WorkItemInput) => apiClient.post<WorkItem>('/work-queue', data).then((r) => r.data),
   transition: (id: string, toStatus: WorkItemStatus, observacao?: string) =>
     apiClient.post<WorkItem>(`/work-queue/${id}/transition`, { toStatus, observacao }).then((r) => r.data),
+  auditar: (id: string, data: { toStatus: WorkItemStatus; quantidadeAuditada: number; observacao?: string }) =>
+    apiClient.post<WorkItem>(`/work-queue/${id}/transition`, data).then((r) => r.data),
+  lancarEstoqueBaseLinker: (id: string) =>
+    apiClient.post<WorkItem>(`/work-queue/${id}/lancar-estoque`).then((r) => r.data),
   updateObservacao: (id: string, observacao: string) =>
     apiClient.put<WorkItem>(`/work-queue/${id}/observacao`, { observacao }).then((r) => r.data),
   pay: (id: string) => apiClient.post<WorkItem>(`/work-queue/${id}/pay`).then((r) => r.data),

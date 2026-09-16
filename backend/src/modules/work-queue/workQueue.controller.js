@@ -7,6 +7,8 @@ const { assertTransition, assertCooldown, dateFieldFor, TransitionError } = requ
 const { stripFinancials, stripFinancialsList, isOwner } = require("./financialAccess");
 const { payItems, PaymentError } = require("../payments/payment.service");
 const sse = require("../realtime/sse.service");
+const baselinkerStock = require("../../shared/baselinker/baselinkerStock.service");
+const { BaseLinkerError } = require("../../shared/baselinker/baselinkerClient");
 
 function scopeToAtelier(req, filter) {
   if (req.user.principalType === "atelier") {
@@ -66,7 +68,7 @@ const LIST_SAFETY_LIMIT = 1000;
 const MAX_PAGE_SIZE = 200;
 
 async function list(req, res) {
-  const { atelierId, status, paymentStatus, q, page, limit } = req.query;
+  const { atelierId, status, paymentStatus, estoqueStatus, q, page, limit } = req.query;
   let filter = {};
   const atelierIdFilter = toFilterValue(atelierId);
   if (atelierIdFilter) filter.atelierId = atelierIdFilter;
@@ -74,6 +76,8 @@ async function list(req, res) {
   if (statusFilter) filter.status = statusFilter;
   const paymentStatusFilter = toFilterValue(paymentStatus);
   if (paymentStatusFilter) filter.paymentStatus = paymentStatusFilter;
+  const estoqueStatusFilter = toFilterValue(estoqueStatus);
+  if (estoqueStatusFilter) filter["estoqueBaseLinker.status"] = estoqueStatusFilter;
   if (q) filter = applySearch(filter, q);
   filter = scopeToAtelier(req, filter);
 
@@ -191,8 +195,10 @@ async function create(req, res) {
   res.status(201).json(stripFinancials(item, req.user));
 }
 
+const AUDITORIA_STATUSES = ["auditoria_aprovada", "auditoria_divergente"];
+
 async function transition(req, res) {
-  const { toStatus, observacao } = req.body;
+  const { toStatus, observacao, quantidadeAuditada } = req.body;
   if (!toStatus) {
     return res.status(400).json({ message: "toStatus e obrigatorio" });
   }
@@ -223,6 +229,26 @@ async function transition(req, res) {
     throw err;
   }
 
+  if (AUDITORIA_STATUSES.includes(toStatus)) {
+    if (item.estoqueBaseLinker?.status === "lancado") {
+      return res.status(409).json({
+        message: "Lote ja lancado no BaseLinker — nao e possivel reauditar sem antes corrigir o estoque manualmente",
+      });
+    }
+    if (toStatus === "auditoria_divergente") {
+      const qtd = Number(quantidadeAuditada);
+      if (!qtd || qtd < 1 || qtd > 50) {
+        return res.status(400).json({ message: "Informe a quantidade real auditada (entre 1 e 50)" });
+      }
+      if (!observacao || observacao.trim().length < 5) {
+        return res.status(400).json({ message: "Descreva a divergencia encontrada (minimo 5 caracteres)" });
+      }
+      item.quantidadeAuditada = qtd;
+    } else {
+      item.quantidadeAuditada = quantidadeAuditada !== undefined ? Number(quantidadeAuditada) : item.specs.quantidadeFardo;
+    }
+  }
+
   const before = item.status;
   item.status = toStatus;
 
@@ -241,6 +267,14 @@ async function transition(req, res) {
 
   await item.save();
 
+  // O "reason" e o campo que a tela de Logs destaca visualmente — sem ele, a
+  // observacao/quantidade de uma auditoria (ex.: divergente) ficava so como o
+  // status bruto "Descarregado -> Em Analise", sem nenhum detalhe do que foi
+  // apurado, mesmo com o operador tendo preenchido tudo certo no modal.
+  const auditReason = AUDITORIA_STATUSES.includes(toStatus)
+    ? `Qtd. auditada: ${item.quantidadeAuditada} un.${observacao ? ` — ${observacao}` : ""}`
+    : observacao;
+
   await auditService.record({
     entityType: "WorkItem",
     entityId: item._id,
@@ -249,10 +283,69 @@ async function transition(req, res) {
     field: "status",
     oldValue: before,
     newValue: toStatus,
+    reason: auditReason,
   });
   sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json(stripFinancials(item, req.user));
+}
+
+async function lancarEstoque(req, res) {
+  const filter = scopeToAtelier(req, { _id: req.params.id });
+  const item = await WorkItem.findOne(filter);
+  if (!item) {
+    return res.status(404).json({ message: "Trabalho nao encontrado" });
+  }
+
+  if (!AUDITORIA_STATUSES.includes(item.status)) {
+    return res.status(409).json({ message: "Lote precisa estar auditado (conforme ou divergente) para lancar estoque" });
+  }
+  if (item.estoqueBaseLinker?.status === "lancado") {
+    return res.status(409).json({ message: "Este lote ja foi lancado no BaseLinker" });
+  }
+  if (!item.quantidadeAuditada) {
+    return res.status(409).json({ message: "Lote sem quantidade auditada registrada" });
+  }
+
+  const measurement = await Measurement.findById(item.specs.measurementId);
+  const sku = measurement?.sku;
+  if (!sku) {
+    return res.status(422).json({ message: "A medida deste lote nao tem SKU cadastrado" });
+  }
+
+  try {
+    const resultado = await baselinkerStock.incrementStock(sku, item.quantidadeAuditada);
+    item.estoqueBaseLinker = {
+      status: "lancado",
+      quantidadeEnviada: resultado.quantidadeEnviada,
+      baseLinkerProductId: resultado.productId,
+      lancadoEm: new Date(),
+    };
+    await item.save();
+
+    await auditService.record({
+      entityType: "WorkItem",
+      entityId: item._id,
+      user: req.user,
+      action: "update",
+      field: "estoqueBaseLinker",
+      newValue: { sku, ...resultado },
+    });
+    sse.broadcastWorkItem("workItemUpdated", item);
+
+    return res.json(stripFinancials(item, req.user));
+  } catch (err) {
+    if (err instanceof BaseLinkerError) {
+      item.estoqueBaseLinker = {
+        ...(item.estoqueBaseLinker?.toObject ? item.estoqueBaseLinker.toObject() : item.estoqueBaseLinker),
+        status: "erro",
+        ultimoErro: err.message,
+      };
+      await item.save();
+      return res.status(502).json({ message: err.message });
+    }
+    throw err;
+  }
 }
 
 const STATUS_ORDER = [
@@ -554,6 +647,7 @@ async function setArchived(req, res) {
     oldValue: before,
     newValue: item.isArchived,
   });
+  sse.broadcastWorkItem("workItemUpdated", item);
 
   res.json(stripFinancials(item, req.user));
 }
@@ -600,6 +694,7 @@ module.exports = {
   getById,
   create,
   transition,
+  lancarEstoque,
   confirmByQr,
   updateObservacao,
   pay,

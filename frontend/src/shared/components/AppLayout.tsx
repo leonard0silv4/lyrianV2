@@ -32,6 +32,13 @@ const NAV_ITEMS: NavItem[] = [
   },
   { to: '/medidas', icon: 'fa-ruler', label: 'Medidas', permission: 'measurements:read', staffOnly: true },
   {
+    to: '/auditoria',
+    icon: 'fa-shield-halved',
+    label: 'Auditoria',
+    permission: 'work-queue:baselinker-push',
+    staffOnly: true,
+  },
+  {
     to: '/pagamentos',
     icon: 'fa-sack-dollar',
     label: 'Pagamentos',
