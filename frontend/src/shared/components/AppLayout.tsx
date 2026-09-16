@@ -44,13 +44,13 @@ const NAV_ITEMS: NavItem[] = [
     permission: "measurements:read",
     staffOnly: true,
   },
-  // {
-  //   to: '/auditoria',
-  //   icon: 'fa-shield-halved',
-  //   label: 'Auditoria',
-  //   permission: 'work-queue:baselinker-push',
-  //   staffOnly: true,
-  // },
+  {
+    to: "/auditoria",
+    icon: "fa-shield-halved",
+    label: "Auditoria",
+    permission: "work-queue:baselinker-push",
+    staffOnly: true,
+  },
   {
     to: "/pagamentos",
     icon: "fa-sack-dollar",
@@ -145,7 +145,9 @@ export function AppLayout() {
             aria-label="Alternar tema"
             title="Alternar tema"
           >
-            <i className={`fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"}`} />
+            <i
+              className={`fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"}`}
+            />
           </button>
           <button
             className="lya-topnav-logout"
