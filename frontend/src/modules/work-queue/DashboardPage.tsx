@@ -8,6 +8,7 @@ import { KpiCard } from '../../shared/ui/KpiCard'
 import { SearchBox } from '../../shared/ui/SearchBox'
 import { FilterPopover } from '../../shared/ui/FilterPopover'
 import { Badge, PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import { usePermission } from '../permissions/usePermission'
 import { useSse } from '../../shared/hooks/useSse'
 import { useDebouncedValue } from '../../shared/hooks/useDebouncedValue'
@@ -208,7 +209,7 @@ export function DashboardPage() {
   if (loading || !dashboard) {
     return (
       <div className="lya-container">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }
@@ -291,7 +292,7 @@ export function DashboardPage() {
           </tbody>
         </table>
         {items.length === 0 && <p className="lya-empty-state">Nenhum lote encontrado.</p>}
-        {loadingMore && <p className="lya-empty-state">Carregando mais...</p>}
+        {loadingMore && <LoadingState message="Carregando mais..." />}
       </div>
     </div>
   )

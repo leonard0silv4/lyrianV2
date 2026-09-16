@@ -10,6 +10,7 @@ import { ObservacaoModal } from './ObservacaoModal'
 import { RatingModal } from './RatingModal'
 import { EditSpecsModal } from './EditSpecsModal'
 import { ReasonModal } from './ReasonModal'
+import { useConfirm } from '../../shared/ui/confirm/ConfirmProvider'
 
 const ACTION_CLASS: Record<string, string> = {
   coletado: 'coletado',
@@ -37,6 +38,7 @@ export const LoteCard = memo(function LoteCard({
   atelierNome?: string
 }) {
   const { isOwner, isAtelier } = usePermission()
+  const confirm = useConfirm()
   const action = NEXT_ACTION[item.status]
   const isDivergente = item.status === 'auditoria_divergente'
   const canShowAction = !isAtelier || atelierCanAdvance(item.status)
@@ -48,7 +50,12 @@ export const LoteCard = memo(function LoteCard({
 
   async function handleToggleArchive() {
     if (!onUpdated) return
-    if (!confirm(`Arquivar o lote ${item.code}? Ele sairá da lista principal.`)) return
+    const ok = await confirm({
+      message: `Arquivar o lote ${item.code}? Ele sairá da lista principal.`,
+      confirmLabel: 'Arquivar',
+      danger: true,
+    })
+    if (!ok) return
     const updated = await workQueueApi.setArchived(item._id, true)
     onUpdated(updated)
   }

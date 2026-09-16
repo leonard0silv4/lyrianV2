@@ -13,6 +13,8 @@ import { usePermission } from '../permissions/usePermission'
 import { NEXT_ACTION } from './stageFlow'
 import { useSse } from '../../shared/hooks/useSse'
 import { VirtualCardGrid } from '../../shared/ui/VirtualCardGrid'
+import { useToast } from '../../shared/ui/toast/ToastProvider'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 const TABS = [
   { key: 'todos', label: 'Todos' },
@@ -34,6 +36,7 @@ export function MesaProducaoPage() {
   const [adiantamentoDraft, setAdiantamentoDraft] = useState(0)
   const [savingAdiantamento, setSavingAdiantamento] = useState(false)
   const { can, isOwner } = usePermission()
+  const toast = useToast()
 
   function loadInitial() {
     if (!id) return
@@ -53,7 +56,7 @@ export function MesaProducaoPage() {
       const updated = await ateliersApi.setAdiantamento(id, adiantamentoDraft)
       setAtelier(updated)
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível salvar o adiantamento')
+      toast.error(err.response?.data?.message || 'Não foi possível salvar o adiantamento')
     } finally {
       setSavingAdiantamento(false)
     }
@@ -125,10 +128,10 @@ export function MesaProducaoPage() {
         const updated = await workQueueApi.transition(item._id, action.toStatus)
         patchItem(updated)
       } catch (err: any) {
-        alert(err.response?.data?.message || 'Não foi possível avançar a etapa')
+        toast.error(err.response?.data?.message || 'Não foi possível avançar a etapa')
       }
     },
-    [patchItem]
+    [patchItem, toast]
   )
 
   const handleReprocess = useCallback(
@@ -137,10 +140,10 @@ export function MesaProducaoPage() {
         const updated = await workQueueApi.transition(item._id, 'em_producao')
         patchItem(updated)
       } catch (err: any) {
-        alert(err.response?.data?.message || 'Não foi possível reprocessar')
+        toast.error(err.response?.data?.message || 'Não foi possível reprocessar')
       }
     },
-    [patchItem]
+    [patchItem, toast]
   )
 
   const toggleSelect = useCallback((id: string) => {
@@ -174,7 +177,7 @@ export function MesaProducaoPage() {
   if (loading || !atelier) {
     return (
       <div className="lya-container">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }
@@ -222,7 +225,8 @@ export function MesaProducaoPage() {
                 variant="primary"
                 style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
                 onClick={handleSaveAdiantamento}
-                disabled={savingAdiantamento || adiantamentoDraft === (atelier.saldoAdiantamento || 0)}
+                loading={savingAdiantamento}
+                disabled={adiantamentoDraft === (atelier.saldoAdiantamento || 0)}
               >
                 Salvar
               </Button>

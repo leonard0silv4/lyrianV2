@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { workQueueApi, type WorkItem } from './workQueue.api'
 import { STATUS_LABELS } from '../../shared/ui/Badge'
+import { Spinner } from '../../shared/ui/Spinner'
 
 type Result =
   | { kind: 'loading' }
@@ -35,7 +36,7 @@ export function ConfirmLotePage() {
       <div className="lya-card" style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
         {result.kind === 'loading' && (
           <>
-            <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem', color: 'var(--primary)' }} />
+            <Spinner size={32} color="var(--primary)" />
             <p style={{ marginTop: '1rem' }}>Confirmando...</p>
           </>
         )}
@@ -47,7 +48,7 @@ export function ConfirmLotePage() {
                 width: 64,
                 height: 64,
                 borderRadius: '50%',
-                background: result.alreadyConfirmed ? 'var(--gray-100)' : '#dcfce7',
+                background: result.alreadyConfirmed ? 'var(--gray-100)' : 'var(--tint-success-bg)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -75,7 +76,7 @@ export function ConfirmLotePage() {
                 width: 64,
                 height: 64,
                 borderRadius: '50%',
-                background: '#fee2e2',
+                background: 'var(--tint-danger-bg)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

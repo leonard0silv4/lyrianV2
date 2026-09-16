@@ -63,7 +63,7 @@ export function UserFormModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" form="user-form" type="submit" disabled={saving || !roleId}>
+          <Button variant="primary" form="user-form" type="submit" loading={saving} disabled={!roleId}>
             {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Usuário'}
           </Button>
         </>

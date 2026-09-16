@@ -1,4 +1,5 @@
 import type { WorkItem } from './workQueue.api'
+import { toast } from '../../shared/ui/toast/toastStore'
 
 declare global {
   interface Window {
@@ -13,7 +14,7 @@ declare global {
  */
 export function printLoteLabel(item: WorkItem, atelierNome: string) {
   if (!window.QRCode) {
-    alert('Biblioteca de QR code ainda não carregou, tente novamente em instantes.')
+    toast.error('Biblioteca de QR code ainda não carregou, tente novamente em instantes.')
     return
   }
 

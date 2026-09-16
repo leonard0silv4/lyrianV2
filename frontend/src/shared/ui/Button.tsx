@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react'
+import { Spinner } from './Spinner'
 
 type Variant = 'default' | 'primary' | 'danger' | 'ghost'
 
@@ -12,7 +13,19 @@ const CLASS_BY_VARIANT: Record<Variant, string> = {
 export function Button({
   variant = 'default',
   className = '',
+  loading = false,
+  disabled,
+  children,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return <button className={`${CLASS_BY_VARIANT[variant]} ${className}`.trim()} {...props} />
+}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; loading?: boolean }) {
+  return (
+    <button
+      className={`${CLASS_BY_VARIANT[variant]} ${className}`.trim()}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading && <Spinner size={14} />}
+      {children}
+    </button>
+  )
 }

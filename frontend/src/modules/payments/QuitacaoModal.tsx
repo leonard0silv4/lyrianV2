@@ -52,7 +52,7 @@ export function QuitacaoModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleConfirm} disabled={saving}>
+          <Button variant="primary" onClick={handleConfirm} loading={saving}>
             {saving ? 'Confirmando...' : 'Confirmar Quitação PIX'}
           </Button>
         </>
@@ -62,8 +62,8 @@ export function QuitacaoModal({
         style={{
           display: 'flex',
           gap: '0.75rem',
-          background: '#fffbeb',
-          border: '1.5px solid #fde68a',
+          background: 'var(--tint-warning-bg)',
+          border: '1.5px solid var(--warning)',
           borderRadius: 'var(--radius)',
           padding: '0.875rem 1rem',
         }}

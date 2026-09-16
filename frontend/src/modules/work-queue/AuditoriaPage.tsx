@@ -8,6 +8,8 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { KpiCard } from '../../shared/ui/KpiCard'
 import { SearchBox } from '../../shared/ui/SearchBox'
 import { Button } from '../../shared/ui/Button'
+import { LoadingState } from '../../shared/ui/LoadingState'
+import { useToast } from '../../shared/ui/toast/ToastProvider'
 import { AuditoriaModal } from './AuditoriaModal'
 import { usePermission } from '../permissions/usePermission'
 import { useSse } from '../../shared/hooks/useSse'
@@ -207,6 +209,7 @@ export function AuditoriaPage() {
   const [modalItem, setModalItem] = useState<WorkItem | null>(null)
   const [pushingId, setPushingId] = useState<string | null>(null)
   const { can } = usePermission()
+  const toast = useToast()
   const canAuditar = can('work-queue:advance')
   const canLancar = can('work-queue:baselinker-push')
   const parentRef = useRef<HTMLDivElement>(null)
@@ -311,7 +314,7 @@ export function AuditoriaPage() {
       const updated = await workQueueApi.lancarEstoqueBaseLinker(item._id)
       patchItem(updated)
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível lançar o estoque no BaseLinker')
+      toast.error(err.response?.data?.message || 'Não foi possível lançar o estoque no BaseLinker')
     } finally {
       setPushingId(null)
     }
@@ -320,7 +323,7 @@ export function AuditoriaPage() {
   if (loading) {
     return (
       <div className="lya-container">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }
@@ -420,7 +423,7 @@ export function AuditoriaPage() {
           </tbody>
         </table>
         {items.length === 0 && <p className="lya-empty-state">Nenhum fardo encontrado.</p>}
-        {loadingMore && <p className="lya-empty-state">Carregando mais...</p>}
+        {loadingMore && <LoadingState message="Carregando mais..." />}
       </div>
 
       {modalItem && (

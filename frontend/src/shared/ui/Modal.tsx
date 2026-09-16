@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 export function Modal({
@@ -22,6 +22,14 @@ export function Modal({
   maxWidth?: number
   noScroll?: boolean
 }) {
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   // Renderizado via portal direto em document.body: cards de listas virtualizadas
   // (VirtualCardGrid/DashboardPage) usam `transform` nas linhas para posicionar o
   // scroll, e isso cria um novo containing block para descendentes `position: fixed`.

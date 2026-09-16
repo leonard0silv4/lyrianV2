@@ -7,6 +7,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { KpiCard } from '../../shared/ui/KpiCard'
 import { Button } from '../../shared/ui/Button'
 import { NumberInput } from '../../shared/ui/NumberInput'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import { QuitacaoModal } from './QuitacaoModal'
 import { ExtratoModal } from './ExtratoModal'
 import { ComprovanteModal } from './ComprovanteModal'
@@ -97,7 +98,7 @@ export function PagamentoPage() {
   if (loading || !atelier) {
     return (
       <div className="lya-container">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }

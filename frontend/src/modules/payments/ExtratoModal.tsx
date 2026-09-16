@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Modal } from '../../shared/ui/Modal'
 import { paymentsApi, type PaymentBatch } from './payments.api'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 export function ExtratoModal({
   atelierId,
@@ -24,7 +25,7 @@ export function ExtratoModal({
   return (
     <Modal title="Extrato Geral de Pagamentos PIX" icon="fa-file-invoice-dollar" onClose={onClose} maxWidth={860} noScroll>
       {loading ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : batches.length === 0 ? (
         <p className="lya-empty-state">Nenhuma quitação registrada ainda.</p>
       ) : (

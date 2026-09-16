@@ -46,7 +46,7 @@ export function BonusModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>
             {saving ? 'Aplicando...' : 'Aplicar Bônus'}
           </Button>
         </>

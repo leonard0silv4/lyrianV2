@@ -108,7 +108,7 @@ export function EditSpecsModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>
             {saving ? 'Salvando...' : 'Salvar Medidas'}
           </Button>
         </>
@@ -163,7 +163,7 @@ export function EditSpecsModal({
 
       <div
         style={{
-          background: '#eff6ff',
+          background: 'var(--tint-info-bg)',
           borderRadius: 'var(--radius)',
           padding: '0.875rem',
           display: 'grid',

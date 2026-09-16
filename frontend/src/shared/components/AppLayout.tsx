@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../modules/auth/AuthContext";
 import { usePermission } from "../../modules/permissions/usePermission";
+import { useTheme } from "../theme/ThemeContext";
 
 type NavItem = {
   to: string;
@@ -84,6 +85,7 @@ function isNavItemActive(pathname: string, item: NavItem) {
 export function AppLayout() {
   const { principal, logout } = useAuth();
   const { can, isAtelier } = usePermission();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -137,6 +139,14 @@ export function AppLayout() {
               )}
             </div>
           </div>
+          <button
+            className="lya-topnav-logout"
+            onClick={toggleTheme}
+            aria-label="Alternar tema"
+            title="Alternar tema"
+          >
+            <i className={`fa-solid ${theme === "dark" ? "fa-sun" : "fa-moon"}`} />
+          </button>
           <button
             className="lya-topnav-logout"
             onClick={handleLogout}

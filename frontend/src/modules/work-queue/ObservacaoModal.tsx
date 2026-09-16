@@ -37,7 +37,7 @@ export function ObservacaoModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>
             {saving ? 'Salvando...' : 'Salvar Observação'}
           </Button>
         </>

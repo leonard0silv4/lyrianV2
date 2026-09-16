@@ -46,7 +46,7 @@ export function ReasonModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving}>
             {saving ? 'Desfazendo...' : 'Confirmar'}
           </Button>
         </>

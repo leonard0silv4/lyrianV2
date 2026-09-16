@@ -5,6 +5,7 @@ import { usePermission } from '../permissions/usePermission'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { Button } from '../../shared/ui/Button'
 import { SearchBox } from '../../shared/ui/SearchBox'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import { MeasurementFormModal } from './MeasurementFormModal'
 
 export function MeasurementListPage() {
@@ -53,7 +54,7 @@ export function MeasurementListPage() {
       </div>
 
       {loading ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : filtered.length === 0 ? (
         <p className="lya-empty-state">Nenhuma medida encontrada.</p>
       ) : (
@@ -101,7 +102,9 @@ function MeasurementCard({
         <span
           className="lya-mono"
           style={{
-            background: 'var(--gray-900)',
+            // Literal (não var(--gray-900)): este chip precisa de fundo sempre
+            // escuro nos dois temas — var(--gray-900) inverteria para claro no dark.
+            background: '#0f172a',
             color: '#fff',
             borderRadius: 'var(--radius-sm)',
             padding: '0.3rem 0.55rem',

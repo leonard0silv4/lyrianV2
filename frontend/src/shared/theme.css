@@ -19,6 +19,23 @@
   --gray-800: #1e293b;
   --gray-900: #0f172a;
 
+  --surface: #fff;
+
+  --tint-info-bg: #eff6ff;
+  --tint-info-fg: var(--primary-dark);
+  --tint-warning-bg: #fef3c7;
+  --tint-warning-fg: #92400e;
+  --tint-success-bg: #dcfce7;
+  --tint-success-fg: #065f46;
+  --tint-danger-bg: #fee2e2;
+  --tint-danger-fg: #991b1b;
+  --tint-purple-bg: #f5f3ff;
+  --tint-purple-fg: #6d28d9;
+  --tint-teal-bg: #f0fdfa;
+  --tint-teal-fg: #0f766e;
+  --tint-indigo-bg: #eef2ff;
+  --tint-indigo-fg: #4338ca;
+
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 14px;
@@ -33,6 +50,49 @@
   --font-mono: "Courier New", monospace;
 
   color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --gray-50: #0f172a;
+  --gray-100: #1e293b;
+  --gray-200: #334155;
+  --gray-300: #475569;
+  --gray-400: #64748b;
+  --gray-500: #94a3b8;
+  --gray-600: #cbd5e1;
+  --gray-700: #e2e8f0;
+  --gray-800: #f1f5f9;
+  --gray-900: #f8fafc;
+
+  --surface: var(--gray-100);
+
+  --tint-info-bg: rgba(59, 130, 246, 0.16);
+  --tint-info-fg: #93c5fd;
+  --tint-warning-bg: rgba(217, 119, 6, 0.18);
+  --tint-warning-fg: #fbbf24;
+  --tint-success-bg: rgba(5, 150, 105, 0.18);
+  --tint-success-fg: #6ee7b7;
+  --tint-danger-bg: rgba(220, 38, 38, 0.18);
+  --tint-danger-fg: #fca5a5;
+  --tint-purple-bg: rgba(124, 58, 237, 0.18);
+  --tint-purple-fg: #c4b5fd;
+  --tint-teal-bg: rgba(13, 148, 136, 0.18);
+  --tint-teal-fg: #5eead4;
+  --tint-indigo-bg: rgba(79, 70, 229, 0.2);
+  --tint-indigo-fg: #a5b4fc;
+
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  /* Literal (não var(--gray-900)): o body precisa de um tom sempre escuro aqui;
+     --gray-900 inverte para o tom mais claro da escala neste tema. */
+  background: linear-gradient(135deg, #0f172a 0%, #0b1120 100%);
+}
+
+[data-theme="dark"] .lya-topnav,
+[data-theme="dark"] .lya-page-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #0b1120 100%);
 }
 
 * {
@@ -110,7 +170,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-800);
   border: none;
   border-radius: var(--radius-sm);
@@ -141,7 +201,7 @@ body {
 }
 
 .lya-btn-danger {
-  background: #fff;
+  background: var(--surface);
   color: var(--danger);
   border: 1px solid var(--danger);
 }
@@ -329,7 +389,7 @@ body {
 }
 
 .lya-card {
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 1.125rem;
@@ -345,7 +405,7 @@ body {
 .lya-kpi-card {
   position: relative;
   overflow: hidden;
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   padding: 1.125rem 1.25rem;
@@ -443,7 +503,7 @@ body {
   font-family: var(--font-sans);
   font-size: 0.8125rem;
   color: var(--gray-800);
-  background: #fff;
+  background: var(--surface);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -481,7 +541,7 @@ body {
 table.lya-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -512,7 +572,7 @@ table.lya-table tbody tr:nth-child(even) {
 }
 
 table.lya-table tbody tr:hover {
-  background: #eff6ff;
+  background: var(--tint-info-bg);
 }
 
 .lya-modal-overlay {
@@ -528,7 +588,7 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-modal {
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xl);
   width: 100%;
@@ -541,6 +601,98 @@ table.lya-table tbody tr:hover {
 
 .lya-modal-body {
   overflow-y: auto;
+}
+
+.lya-toast-viewport {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+  max-width: calc(100vw - 2rem);
+}
+
+.lya-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 0.75rem 0.875rem;
+  min-width: 280px;
+  max-width: 380px;
+  border-left: 4px solid var(--primary);
+}
+
+.lya-toast-success {
+  border-left-color: var(--success);
+}
+
+.lya-toast-error {
+  border-left-color: var(--danger);
+}
+
+.lya-toast-info {
+  border-left-color: var(--primary);
+}
+
+.lya-toast-icon {
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.lya-toast-success .lya-toast-icon {
+  color: var(--success);
+}
+
+.lya-toast-error .lya-toast-icon {
+  color: var(--danger);
+}
+
+.lya-toast-info .lya-toast-icon {
+  color: var(--primary);
+}
+
+.lya-toast-message {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: var(--gray-800);
+  line-height: 1.4;
+}
+
+.lya-toast-close {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lya-toast-close:hover {
+  background: var(--gray-100);
+  color: var(--gray-600);
+}
+
+@media (max-width: 768px) {
+  .lya-toast-viewport {
+    left: 1rem;
+    right: 1rem;
+  }
+  .lya-toast {
+    min-width: 0;
+    max-width: none;
+  }
 }
 
 @media (max-width: 768px) {
@@ -558,7 +710,7 @@ table.lya-table tbody tr:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, var(--gray-50) 0%, #fff 100%);
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--surface) 100%);
   gap: 0.875rem;
 }
 
@@ -646,7 +798,9 @@ table.lya-table tbody tr:hover {
   height: 54px;
   border-radius: var(--radius);
   background: #fde047;
-  color: var(--gray-900);
+  /* Literal (não var(--gray-900)): o fundo amarelo é fixo nos dois temas, então o
+     texto precisa continuar escuro sempre — var(--gray-900) inverteria para claro. */
+  color: #1e293b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -663,7 +817,7 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-credentials-box {
-  background: #eff6ff;
+  background: var(--tint-info-bg);
   border-radius: var(--radius);
   padding: 1rem;
   margin-bottom: 0.875rem;
@@ -721,7 +875,7 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-checklist-undo:hover {
-  background: #fef2f2;
+  background: var(--tint-danger-bg);
   color: var(--danger);
 }
 
@@ -734,7 +888,7 @@ table.lya-table tbody tr:hover {
   padding: 0.4rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 600;
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-700);
   cursor: pointer;
   transition: all 0.15s ease;
@@ -742,8 +896,8 @@ table.lya-table tbody tr:hover {
 
 .lya-step-chip.active {
   border-color: var(--primary);
-  background: #eff6ff;
-  color: var(--primary-dark);
+  background: var(--tint-info-bg);
+  color: var(--tint-info-fg);
 }
 
 .lya-step-badge-num {
@@ -768,7 +922,7 @@ table.lya-table tbody tr:hover {
   position: absolute;
   top: calc(100% + 0.5rem);
   left: 0;
-  background: #fff;
+  background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow-xl);
   padding: 0.75rem;
@@ -792,7 +946,8 @@ table.lya-table tbody tr:hover {
 
 .lya-filter-chip.active {
   border-color: var(--primary);
-  background: #eff6ff;
+  background: var(--tint-info-bg);
+  color: var(--tint-info-fg);
 }
 
 .lya-tabs {
@@ -808,7 +963,7 @@ table.lya-table tbody tr:hover {
   font-size: 0.75rem;
   font-weight: 600;
   border: 1px solid var(--gray-200);
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-600);
   cursor: pointer;
 }
@@ -830,6 +985,13 @@ table.lya-table tbody tr:hover {
   padding: 3rem 1rem;
   color: var(--gray-500);
   font-size: 0.875rem;
+}
+
+.lya-loading-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 /* Selection bar (multi-select aggregate totals) */
@@ -877,8 +1039,8 @@ table.lya-table tbody tr:hover {
   font-size: 0.75rem;
   font-weight: 800;
   border: 1px solid var(--primary-light);
-  background: #eff6ff;
-  color: var(--primary-dark);
+  background: var(--tint-info-bg);
+  color: var(--tint-info-fg);
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: -2px -2px 5px rgba(255, 255, 255, 0.7), 2px 2px 5px rgba(148, 163, 184, 0.25);
@@ -888,6 +1050,10 @@ table.lya-table tbody tr:hover {
   gap: 0.4rem;
 }
 
+[data-theme="dark"] .lya-lote-action-btn {
+  box-shadow: -2px -2px 5px rgba(255, 255, 255, 0.04), 2px 2px 5px rgba(0, 0, 0, 0.35);
+}
+
 .lya-lote-action-btn:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
@@ -895,20 +1061,20 @@ table.lya-table tbody tr:hover {
 
 .lya-lote-action-btn.pronto {
   border-color: var(--warning);
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--tint-warning-bg);
+  color: var(--tint-warning-fg);
 }
 
 .lya-lote-action-btn.coletado {
   border-color: var(--success);
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--tint-success-bg);
+  color: var(--tint-success-fg);
 }
 
 .lya-lote-action-btn.danger {
   border-color: var(--danger);
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--tint-danger-bg);
+  color: var(--tint-danger-fg);
 }
 
 /* ==================== Papéis e Permissões ==================== */
@@ -1042,28 +1208,28 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-perm-badge.cat-users {
-  background: #eff6ff;
-  color: var(--primary);
+  background: var(--tint-info-bg);
+  color: var(--tint-info-fg);
 }
 
 .lya-perm-badge.cat-roles {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--tint-purple-bg);
+  color: var(--tint-purple-fg);
 }
 
 .lya-perm-badge.cat-ateliers {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--tint-warning-bg);
+  color: var(--tint-warning-fg);
 }
 
 .lya-perm-badge.cat-measurements {
-  background: #f0fdfa;
-  color: #0f766e;
+  background: var(--tint-teal-bg);
+  color: var(--tint-teal-fg);
 }
 
 .lya-perm-badge.cat-work-queue {
-  background: #eef2ff;
-  color: #4338ca;
+  background: var(--tint-indigo-bg);
+  color: var(--tint-indigo-fg);
 }
 
 .lya-perm-badge.cat-audit {
@@ -1072,8 +1238,8 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-perm-badge.cat-payments {
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--tint-success-bg);
+  color: var(--tint-success-fg);
 }
 
 .lya-role-empty-perms {
@@ -1100,6 +1266,12 @@ table.lya-table tbody tr:hover {
   --p-gray-900: #0f172a;
   background: var(--p-gray-50);
   min-height: 100vh;
+}
+
+/* .lya-empty-state usa var(--gray-500), que é global e inverte com o tema; o
+   Portal do Ateliê é sempre claro (--p-gray-*), então precisa do próprio tom. */
+.lya-portal .lya-empty-state {
+  color: var(--p-gray-500);
 }
 
 .lya-portal-topbar {
@@ -1403,8 +1575,8 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-icon-btn.info {
-  background: #eff6ff;
-  color: var(--primary);
+  background: var(--tint-info-bg);
+  color: var(--tint-info-fg);
   border-color: #bfdbfe;
 }
 .lya-icon-btn.info:hover {
@@ -1412,8 +1584,8 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-icon-btn.warning {
-  background: #fffbeb;
-  color: #b45309;
+  background: var(--tint-warning-bg);
+  color: var(--tint-warning-fg);
   border-color: #fde68a;
 }
 .lya-icon-btn.warning:hover {
@@ -1421,8 +1593,8 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-icon-btn.purple {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: var(--tint-purple-bg);
+  color: var(--tint-purple-fg);
   border-color: #ddd6fe;
 }
 .lya-icon-btn.purple:hover {
@@ -1430,10 +1602,29 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-icon-btn.danger {
-  background: #fef2f2;
-  color: var(--danger);
+  background: var(--tint-danger-bg);
+  color: var(--tint-danger-fg);
   border-color: #fecaca;
 }
 .lya-icon-btn.danger:hover {
   background: #fee2e2;
+}
+
+[data-theme="dark"] .lya-icon-btn.info,
+[data-theme="dark"] .lya-icon-btn.warning,
+[data-theme="dark"] .lya-icon-btn.purple,
+[data-theme="dark"] .lya-icon-btn.danger {
+  border-color: transparent;
+}
+[data-theme="dark"] .lya-icon-btn.info:hover {
+  background: rgba(59, 130, 246, 0.26);
+}
+[data-theme="dark"] .lya-icon-btn.warning:hover {
+  background: rgba(217, 119, 6, 0.28);
+}
+[data-theme="dark"] .lya-icon-btn.purple:hover {
+  background: rgba(124, 58, 237, 0.28);
+}
+[data-theme="dark"] .lya-icon-btn.danger:hover {
+  background: rgba(220, 38, 38, 0.28);
 }

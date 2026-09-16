@@ -3,6 +3,7 @@ import { measurementsApi, type Measurement, type MeasurementInput } from './meas
 import { Modal } from '../../shared/ui/Modal'
 import { Button } from '../../shared/ui/Button'
 import { NumberInput } from '../../shared/ui/NumberInput'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 const EMPTY: MeasurementInput = {
   larguraBobina: 0,
@@ -69,14 +70,14 @@ export function MeasurementFormModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" form="measurement-form" type="submit" disabled={saving || !loaded}>
+          <Button variant="primary" form="measurement-form" type="submit" loading={saving} disabled={!loaded}>
             {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Medida'}
           </Button>
         </>
       }
     >
       {!loaded ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : (
         <form id="measurement-form" onSubmit={handleSubmit}>
           <div>

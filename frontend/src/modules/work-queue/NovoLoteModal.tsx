@@ -4,6 +4,7 @@ import { StepChip, StepSelectorGroup } from '../../shared/ui/StepSelector'
 import { Button } from '../../shared/ui/Button'
 import { NumberInput } from '../../shared/ui/NumberInput'
 import { SearchBox } from '../../shared/ui/SearchBox'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import type { Atelier } from '../ateliers/ateliers.api'
 import { workQueueApi } from './workQueue.api'
 import { measurementsApi, type Measurement } from '../measurements/measurements.api'
@@ -105,7 +106,7 @@ export function NovoLoteModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving || !measurement}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving} disabled={!measurement}>
             {saving ? 'Emitindo...' : 'Emitir Lote'}
           </Button>
         </>
@@ -170,9 +171,7 @@ export function NovoLoteModal({
         currentLabel={measurement ? `${measurement.larguraBobina}x${measurement.comprimentoBobina}m` : undefined}
       >
         {measurementsLoading ? (
-          <span className="lya-empty-state" style={{ padding: 0 }}>
-            Carregando medidas...
-          </span>
+          <LoadingState message="Carregando medidas..." compact />
         ) : measurements.length === 0 ? (
           <span className="lya-form-error" style={{ margin: 0 }}>
             Nenhuma medida ativa cadastrada.{' '}
@@ -218,7 +217,7 @@ export function NovoLoteModal({
 
       <div
         style={{
-          background: '#eff6ff',
+          background: 'var(--tint-info-bg)',
           borderRadius: 'var(--radius)',
           padding: '0.875rem',
           display: 'grid',

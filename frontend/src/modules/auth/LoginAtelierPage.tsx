@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import { Button } from '../../shared/ui/Button'
 
 export function LoginAtelierPage() {
   const [username, setUsername] = useState('')
@@ -110,11 +111,12 @@ export function LoginAtelierPage() {
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
           </div>
           {error && <p style={{ color: '#fca5a5', fontSize: '0.75rem', marginBottom: '0.75rem' }}>{error}</p>}
-          <button
+          <Button
             type="submit"
-            disabled={loading}
+            loading={loading}
             style={{
               width: '100%',
+              justifyContent: 'center',
               padding: '0.75rem',
               borderRadius: 'var(--radius)',
               border: 'none',
@@ -127,7 +129,7 @@ export function LoginAtelierPage() {
             }}
           >
             {loading ? 'Entrando...' : 'Entrar'}
-          </button>
+          </Button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>

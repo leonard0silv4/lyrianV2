@@ -39,7 +39,7 @@ export function RatingModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={saving || !rating}>
+          <Button variant="primary" onClick={handleSubmit} loading={saving} disabled={!rating}>
             {saving ? 'Salvando...' : 'Salvar Avaliação'}
           </Button>
         </>

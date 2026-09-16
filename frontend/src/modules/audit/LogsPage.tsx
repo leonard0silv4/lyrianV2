@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { auditApi, type AuditLogEntry } from './audit.api'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { STATUS_LABELS } from '../../shared/ui/Badge'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 const ACTION_LABELS: Record<string, string> = {
   create: 'Criação',
@@ -57,7 +58,7 @@ function EntryLine({ entry }: { entry: AuditLogEntry }) {
           style={{
             fontSize: '0.75rem',
             color: 'var(--gray-700)',
-            background: '#fef3c7',
+            background: 'var(--tint-warning-bg)',
             borderRadius: 'var(--radius-sm)',
             padding: '0.35rem 0.55rem',
           }}
@@ -108,7 +109,7 @@ export function LogsPage() {
       <PageHeader title="Logs do Sistema" subtitle="Histórico de mudanças agrupado por lote" />
 
       {loading ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : groups.length === 0 ? (
         <p className="lya-empty-state">Nenhum registro encontrado.</p>
       ) : (

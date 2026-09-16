@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { ateliersApi, type Atelier, type AtelierInput } from './ateliers.api'
 import { Modal } from '../../shared/ui/Modal'
 import { Button } from '../../shared/ui/Button'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 const EMPTY: AtelierInput = {
   nomeFantasia: '',
@@ -82,14 +83,14 @@ export function AtelierFormModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" form="atelier-form" type="submit" disabled={saving || !loaded}>
+          <Button variant="primary" form="atelier-form" type="submit" loading={saving} disabled={!loaded}>
             {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Salvar Ateliê'}
           </Button>
         </>
       }
     >
       {!loaded ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : (
         <form id="atelier-form" onSubmit={handleSubmit}>
           <div className="lya-form-row" style={{ gridTemplateColumns: '110px 1fr' }}>

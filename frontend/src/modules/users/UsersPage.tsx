@@ -4,6 +4,7 @@ import { PageHeader } from '../../shared/ui/PageHeader'
 import { Button } from '../../shared/ui/Button'
 import { usersApi, type StaffUser } from './users.api'
 import { rolesApi, type Role } from '../permissions/roles.api'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import { UserFormModal } from './UserFormModal'
 
 export function UsersPage() {
@@ -55,7 +56,7 @@ export function UsersPage() {
       )}
 
       {loading ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : users.length === 0 ? (
         <p className="lya-empty-state">Nenhum usuário cadastrado ainda.</p>
       ) : (

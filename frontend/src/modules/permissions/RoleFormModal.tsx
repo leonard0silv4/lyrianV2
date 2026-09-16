@@ -64,7 +64,7 @@ export function RoleFormModal({
       footer={
         <>
           <Button onClick={onClose}>Cancelar</Button>
-          <Button variant="primary" form="role-form" type="submit" disabled={saving}>
+          <Button variant="primary" form="role-form" type="submit" loading={saving}>
             {saving ? 'Salvando...' : 'Salvar Papel'}
           </Button>
         </>

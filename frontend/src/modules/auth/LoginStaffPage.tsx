@@ -72,7 +72,7 @@ export function LoginStaffPage() {
             />
           </div>
           {error && <p className="lya-form-error">{error}</p>}
-          <Button type="submit" variant="primary" disabled={loading} style={{ width: '100%', justifyContent: 'center' }}>
+          <Button type="submit" variant="primary" loading={loading} style={{ width: '100%', justifyContent: 'center' }}>
             {loading ? 'Entrando...' : 'Entrar'}
           </Button>
         </form>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { Button } from '../../shared/ui/Button'
 import { PERMISSION_CATEGORY_META, PERMISSION_LABELS, permissionCategory, rolesApi, type Role } from './roles.api'
+import { LoadingState } from '../../shared/ui/LoadingState'
 import { RoleFormModal } from './RoleFormModal'
 
 const CATEGORY_ORDER = Object.keys(PERMISSION_CATEGORY_META)
@@ -80,7 +81,7 @@ export function RolesPage() {
       )}
 
       {loading ? (
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       ) : roles.length === 0 ? (
         <p className="lya-empty-state">Nenhum papel cadastrado ainda.</p>
       ) : (

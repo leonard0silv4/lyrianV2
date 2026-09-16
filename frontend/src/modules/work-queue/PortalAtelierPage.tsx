@@ -5,6 +5,8 @@ import { useAuth } from '../auth/AuthContext'
 import { NEXT_ACTION, atelierCanAdvance } from './stageFlow'
 import { PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
 import { useSse } from '../../shared/hooks/useSse'
+import { useToast } from '../../shared/ui/toast/ToastProvider'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 const TABS: Array<{ key: string; label: string; statuses?: WorkItemStatus[] }> = [
   { key: 'todos', label: 'Todos' },
@@ -26,6 +28,7 @@ export function PortalAtelierPage() {
   const [loading, setLoading] = useState(true)
   const { principal, logout } = useAuth()
   const navigate = useNavigate()
+  const toast = useToast()
 
   function loadInitial() {
     setLoading(true)
@@ -78,7 +81,7 @@ export function PortalAtelierPage() {
       const updated = await workQueueApi.transition(item._id, action.toStatus)
       patchItem(updated)
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Não foi possível avançar a etapa')
+      toast.error(err.response?.data?.message || 'Não foi possível avançar a etapa')
     }
   }
 
@@ -90,7 +93,7 @@ export function PortalAtelierPage() {
   if (loading) {
     return (
       <div className="lya-portal">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }
@@ -180,7 +183,7 @@ function PortalLoteCard({ item, onAdvance }: { item: WorkItem; onAdvance: () => 
             textTransform: 'uppercase',
             letterSpacing: '0.03em',
             background: isPago ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.06)',
-            color: isPago ? '#fde047' : 'var(--gray-700)',
+            color: isPago ? '#fde047' : 'var(--p-gray-700)',
           }}
         >
           {STATUS_LABELS[item.status]}
@@ -212,7 +215,7 @@ function PortalLoteCard({ item, onAdvance }: { item: WorkItem; onAdvance: () => 
         </div>
         {item.metrics.orcamento !== undefined && (
           <div className="lya-specs-line-valor">
-            <span style={{ fontWeight: 800, color: isPago ? '#d1fae5' : 'var(--gray-600)' }}>Valor Mão de Obra</span>
+            <span style={{ fontWeight: 800, color: isPago ? '#d1fae5' : 'var(--p-gray-600)' }}>Valor Mão de Obra</span>
             <span className="lya-valor-destaque">R$ {item.metrics.orcamento.toFixed(2)}</span>
           </div>
         )}
@@ -238,10 +241,10 @@ function PortalLoteCard({ item, onAdvance }: { item: WorkItem; onAdvance: () => 
 function DateChip({ label, value, dark }: { label: string; value: string; dark?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <span style={{ fontSize: '0.5625rem', fontWeight: 800, color: dark ? '#a7f3d0' : 'var(--gray-500)', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: '0.5625rem', fontWeight: 800, color: dark ? '#a7f3d0' : 'var(--p-gray-500)', textTransform: 'uppercase' }}>
         {label}
       </span>
-      <span style={{ fontWeight: 700, color: dark ? '#fff' : 'var(--gray-800)' }}>{value}</span>
+      <span style={{ fontWeight: 700, color: dark ? '#fff' : 'var(--p-gray-800)' }}>{value}</span>
     </div>
   )
 }

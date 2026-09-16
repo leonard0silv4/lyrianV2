@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ateliersApi, type Atelier } from '../ateliers/ateliers.api'
 import { PageHeader } from '../../shared/ui/PageHeader'
+import { LoadingState } from '../../shared/ui/LoadingState'
 
 export function PaymentsEntryPage() {
   const [ateliers, setAteliers] = useState<Atelier[] | null>(null)
@@ -13,7 +14,7 @@ export function PaymentsEntryPage() {
   if (ateliers === null) {
     return (
       <div className="lya-container">
-        <p className="lya-empty-state">Carregando...</p>
+        <LoadingState />
       </div>
     )
   }
