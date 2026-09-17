@@ -60,6 +60,20 @@ jobs:
             echo "frontend=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Escrever backend/.env a partir do secret
+        if: steps.diff.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
+        working-directory: /cloudclusters/lyria-v2-src/backend
+        env:
+          BACKEND_ENV: ${{ secrets.BACKEND_ENV }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BACKEND_ENV" ]; then
+            echo "Secret BACKEND_ENV vazio/ausente — mantendo .env já existente no servidor." >&2
+          else
+            printf '%s' "$BACKEND_ENV" > .env
+            chmod 600 .env
+          fi
+
       - name: Instalar dependências do backend
         if: steps.diff.outputs.backend == 'true' || github.event_name == 'workflow_dispatch'
         working-directory: /cloudclusters/lyria-v2-src/backend
