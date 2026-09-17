@@ -6,6 +6,8 @@ import type { PaymentBatch } from './payments.api'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { KpiCard } from '../../shared/ui/KpiCard'
 import { Button } from '../../shared/ui/Button'
+import { Badge } from '../../shared/ui/Badge'
+import { InfoPopover } from '../../shared/ui/InfoPopover'
 import { NumberInput } from '../../shared/ui/NumberInput'
 import { LoadingState } from '../../shared/ui/LoadingState'
 import { QuitacaoModal } from './QuitacaoModal'
@@ -194,7 +196,26 @@ export function PagamentoPage() {
         <tbody>
           {filtered.map((item) => (
             <tr key={item._id}>
-              <td className="lya-mono">{item.code}</td>
+              <td className="lya-mono">
+                {item.code}
+                {item.status === 'auditoria_divergente' &&
+                  (item.paymentStatus === 'pago' ? (
+                    <InfoPopover
+                      icon="fa-triangle-exclamation"
+                      text="Auditado com ressalvas — foi encontrada uma divergência na conferência deste lote."
+                    />
+                  ) : (
+                    <span
+                      style={{ marginLeft: '0.4rem', display: 'inline-block' }}
+                      title={item.observacao ? `Divergência na auditoria: ${item.observacao}` : 'Divergência encontrada na auditoria'}
+                    >
+                      <Badge variant="status" value="auditoria_divergente">
+                        <i className="fa-solid fa-triangle-exclamation" />
+                        {' '}Divergente
+                      </Badge>
+                    </span>
+                  ))}
+              </td>
               <td>
                 {item.specs.larguraBobina}m × {item.specs.comprimentoBobina}m · {item.specs.quantidadeFardo} telas
               </td>

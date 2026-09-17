@@ -34,6 +34,8 @@ export function MesaProducaoPage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [adiantamentoDraft, setAdiantamentoDraft] = useState(0)
+  const [adiantamentoModo, setAdiantamentoModo] = useState<'definir' | 'somar'>('definir')
+  const [somaAdiantamento, setSomaAdiantamento] = useState(0)
   const [savingAdiantamento, setSavingAdiantamento] = useState(false)
   const { can, isOwner } = usePermission()
   const toast = useToast()
@@ -57,6 +59,22 @@ export function MesaProducaoPage() {
       setAtelier(updated)
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Não foi possível salvar o adiantamento')
+    } finally {
+      setSavingAdiantamento(false)
+    }
+  }
+
+  async function handleAddAdiantamento() {
+    if (!id || !somaAdiantamento) return
+    setSavingAdiantamento(true)
+    try {
+      const novoSaldo = (atelier?.saldoAdiantamento || 0) + somaAdiantamento
+      const updated = await ateliersApi.setAdiantamento(id, novoSaldo)
+      setAtelier(updated)
+      setAdiantamentoDraft(updated.saldoAdiantamento || 0)
+      setSomaAdiantamento(0)
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Não foi possível adicionar o adiantamento')
     } finally {
       setSavingAdiantamento(false)
     }
@@ -134,18 +152,6 @@ export function MesaProducaoPage() {
     [patchItem, toast]
   )
 
-  const handleReprocess = useCallback(
-    async (item: WorkItem) => {
-      try {
-        const updated = await workQueueApi.transition(item._id, 'em_producao')
-        patchItem(updated)
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || 'Não foi possível reprocessar')
-      }
-    },
-    [patchItem, toast]
-  )
-
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev)
@@ -213,27 +219,122 @@ export function MesaProducaoPage() {
         {isOwner && (
           <div className="lya-kpi-card">
             <div className="lya-kpi-label">Adiantamento do Ateliê</div>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-              <NumberInput
-                style={{ padding: '0.4rem 0.6rem' }}
-                value={adiantamentoDraft}
-                min={0}
-                step={0.01}
-                onChange={setAdiantamentoDraft}
-              />
-              <Button
-                variant="primary"
-                style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
-                onClick={handleSaveAdiantamento}
-                loading={savingAdiantamento}
-                disabled={adiantamentoDraft === (atelier.saldoAdiantamento || 0)}
+            <div
+              style={{
+                display: 'flex',
+                gap: 2,
+                background: 'var(--gray-100)',
+                borderRadius: 'var(--radius-sm)',
+                padding: 2,
+                marginTop: '0.5rem',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setAdiantamentoModo('definir')}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  padding: '0.3rem 0.5rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: adiantamentoModo === 'definir' ? 'var(--surface)' : 'transparent',
+                  color: adiantamentoModo === 'definir' ? 'var(--gray-800)' : 'var(--gray-500)',
+                  boxShadow: adiantamentoModo === 'definir' ? 'var(--shadow-sm)' : 'none',
+                }}
               >
-                Salvar
-              </Button>
+                Definir
+              </button>
+              <button
+                type="button"
+                onClick={() => setAdiantamentoModo('somar')}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  textAlign: 'center',
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  padding: '0.3rem 0.5rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: adiantamentoModo === 'somar' ? 'var(--surface)' : 'transparent',
+                  color: adiantamentoModo === 'somar' ? 'var(--success)' : 'var(--gray-500)',
+                  boxShadow: adiantamentoModo === 'somar' ? 'var(--shadow-sm)' : 'none',
+                }}
+              >
+                + Somar
+              </button>
             </div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--gray-400)', marginTop: '0.4rem' }}>
-              Saldo total do ateliê — descontado aos poucos nos pagamentos.
-            </div>
+
+            {adiantamentoModo === 'definir' ? (
+              <>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <NumberInput
+                    style={{ padding: '0.4rem 0.6rem', flex: 1, minWidth: 0 }}
+                    value={adiantamentoDraft}
+                    min={0}
+                    step={0.01}
+                    onChange={setAdiantamentoDraft}
+                  />
+                  <Button
+                    variant="primary"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', flexShrink: 0 }}
+                    onClick={handleSaveAdiantamento}
+                    loading={savingAdiantamento}
+                    disabled={adiantamentoDraft === (atelier.saldoAdiantamento || 0)}
+                  >
+                    Salvar
+                  </Button>
+                </div>
+                <div style={{ fontSize: '0.6875rem', color: 'var(--gray-400)', marginTop: '0.4rem' }}>
+                  Saldo atual: <strong className="lya-mono">R$ {(atelier.saldoAdiantamento || 0).toFixed(2)}</strong> — substitui o valor
+                  total.
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', alignItems: 'center' }}>
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      fontWeight: 800,
+                      color: 'var(--success)',
+                      fontSize: '0.9375rem',
+                      lineHeight: 1,
+                    }}
+                  >
+                    +
+                  </span>
+                  <NumberInput
+                    style={{ padding: '0.4rem 0.6rem', flex: 1, minWidth: 0 }}
+                    value={somaAdiantamento}
+                    min={0}
+                    step={0.01}
+                    onChange={setSomaAdiantamento}
+                  />
+                  <Button
+                    variant="primary"
+                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+                    onClick={handleAddAdiantamento}
+                    loading={savingAdiantamento}
+                    disabled={!somaAdiantamento}
+                  >
+                    Somar
+                  </Button>
+                </div>
+                <div style={{ fontSize: '0.6875rem', color: 'var(--gray-400)', marginTop: '0.4rem' }}>
+                  Novo saldo:{' '}
+                  <strong className="lya-mono" style={{ color: 'var(--gray-600)' }}>
+                    R$ {((atelier.saldoAdiantamento || 0) + (somaAdiantamento || 0)).toFixed(2)}
+                  </strong>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -297,7 +398,6 @@ export function MesaProducaoPage() {
           <LoteCard
             item={item}
             onAdvance={handleAdvance}
-            onReprocess={handleReprocess}
             onUpdated={patchItem}
             selectable={can('work-queue:write')}
             selected={selected.has(item._id)}

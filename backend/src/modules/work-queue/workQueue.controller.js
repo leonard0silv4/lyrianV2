@@ -257,7 +257,10 @@ async function transition(req, res) {
     item.statusDates[dateField] = new Date();
   }
 
-  if (toStatus === "auditoria_aprovada") {
+  // Divergente tambem e um lote auditado (so com uma ressalva registrada), entao
+  // libera pagamento igual ao aprovado — sem isso um lote com divergencia na
+  // primeira auditoria nunca aparecia como liberado pra pagamento.
+  if (AUDITORIA_STATUSES.includes(toStatus)) {
     item.paymentStatus = "liberado";
   }
 

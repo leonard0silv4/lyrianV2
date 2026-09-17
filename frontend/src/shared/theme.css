@@ -918,6 +918,57 @@ table.lya-table tbody tr:hover {
   position: relative;
 }
 
+.lya-info-popover {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+.lya-info-popover-trigger {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.625rem;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.lya-info-popover-trigger::-webkit-details-marker {
+  display: none;
+}
+
+.lya-info-popover-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  background: var(--gray-800);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+  width: max-content;
+  min-width: 180px;
+  max-width: 220px;
+  z-index: 50;
+  box-shadow: var(--shadow-xl);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.lya-info-popover-panel.align-right {
+  left: auto;
+  right: 0;
+}
+
 .lya-filter-panel {
   position: absolute;
   top: calc(100% + 0.5rem);

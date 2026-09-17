@@ -6,6 +6,7 @@ import { workQueueApi, type WorkItem } from './workQueue.api'
 import { usePermission } from '../permissions/usePermission'
 import { printLoteLabel } from './printLabel'
 import { IconButton } from '../../shared/ui/IconButton'
+import { InfoPopover } from '../../shared/ui/InfoPopover'
 import { ObservacaoModal } from './ObservacaoModal'
 import { RatingModal } from './RatingModal'
 import { EditSpecsModal } from './EditSpecsModal'
@@ -21,7 +22,6 @@ const ACTION_CLASS: Record<string, string> = {
 export const LoteCard = memo(function LoteCard({
   item,
   onAdvance,
-  onReprocess,
   onUpdated,
   selectable,
   selected,
@@ -30,7 +30,6 @@ export const LoteCard = memo(function LoteCard({
 }: {
   item: WorkItem
   onAdvance: (item: WorkItem) => void
-  onReprocess?: (item: WorkItem) => void
   onUpdated?: (updated: WorkItem) => void
   selectable?: boolean
   selected?: boolean
@@ -41,6 +40,9 @@ export const LoteCard = memo(function LoteCard({
   const confirm = useConfirm()
   const action = NEXT_ACTION[item.status]
   const isDivergente = item.status === 'auditoria_divergente'
+  // Uma vez pago, o lote divergente ja esta resolvido — manter a tag "Em Análise"
+  // depois do pagamento passa a impressao de que ainda falta alguma revisao.
+  const isDivergentePago = isDivergente && item.paymentStatus === 'pago'
   const canShowAction = !isAtelier || atelierCanAdvance(item.status)
   const showFinance = isOwner || isAtelier
   const showAdminTools = !isAtelier && onUpdated
@@ -76,8 +78,19 @@ export const LoteCard = memo(function LoteCard({
             {item.code}
           </span>
         </div>
-        <Badge variant="status" value={item.status}>
-          {isDivergente ? STATUS_LABELS.auditoria_divergente : STATUS_LABELS[item.status]}
+        <Badge variant="status" value={isDivergentePago ? 'auditoria_aprovada' : item.status}>
+          {isDivergentePago ? (
+            <>
+              {STATUS_LABELS.auditoria_aprovada}
+              <InfoPopover
+                icon="fa-triangle-exclamation"
+                text="Auditado com ressalvas — foi encontrada uma divergência na conferência deste lote."
+                align="right"
+              />
+            </>
+          ) : (
+            STATUS_LABELS[item.status]
+          )}
         </Badge>
       </div>
 
@@ -159,11 +172,7 @@ export const LoteCard = memo(function LoteCard({
         </div>
       )}
 
-      {isDivergente && onReprocess && !isAtelier ? (
-        <button className="lya-lote-action-btn danger" onClick={() => onReprocess(item)}>
-          <i className="fa-solid fa-rotate-left" /> Reprocessar
-        </button>
-      ) : action && canShowAction ? (
+      {action && canShowAction ? (
         <button
           className={`lya-lote-action-btn ${ACTION_CLASS[action.toStatus] || ''}`.trim()}
           onClick={() => onAdvance(item)}

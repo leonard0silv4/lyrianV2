@@ -51,5 +51,4 @@ export const NEXT_ACTION: Partial<Record<WorkItemStatus, { toStatus: WorkItemSta
   pronto: { toStatus: 'coletado', label: 'Marcar Coletado', icon: 'fa-truck' },
   coletado: { toStatus: 'descarregado', label: 'Marcar Descarregado', icon: 'fa-warehouse' },
   descarregado: { toStatus: 'auditoria_aprovada', label: 'Aprovar Auditoria', icon: 'fa-clipboard-check' },
-  auditoria_divergente: { toStatus: 'em_producao', label: 'Reprocessar', icon: 'fa-rotate-left' },
 }

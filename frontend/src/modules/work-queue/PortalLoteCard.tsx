@@ -3,6 +3,7 @@ import type { WorkItem } from './workQueue.api'
 import { MIN_COSTURA_MS, NEXT_ACTION, atelierCanAdvance } from './stageFlow'
 import { PAYMENT_LABELS, STATUS_LABELS } from '../../shared/ui/Badge'
 import { BottomSheet } from '../../shared/ui/BottomSheet'
+import { InfoPopover } from '../../shared/ui/InfoPopover'
 
 function formatDate(value?: string) {
   if (!value) return '--'
@@ -20,7 +21,11 @@ export function PortalLoteCard({ item, now, onAdvance }: { item: WorkItem; now: 
   const [avisoAberto, setAvisoAberto] = useState(false)
   const action = NEXT_ACTION[item.status]
   const canAdvance = atelierCanAdvance(item.status)
-  const isPago = item.status === 'auditoria_aprovada'
+  const isDivergente = item.status === 'auditoria_divergente'
+  // Divergente ainda e um lote auditado — pro faccionista ele deve aparecer
+  // igual a um lote aprovado (mesma cor, mesmo card de "liberado p/ pagamento"),
+  // so com o aviso extra abaixo avisando que foi encontrada uma divergencia.
+  const isPago = item.status === 'auditoria_aprovada' || isDivergente
 
   const emProducaoDesde = item.statusDates?.emProducaoEm
   const remainingMs =
@@ -28,9 +33,10 @@ export function PortalLoteCard({ item, now, onAdvance }: { item: WorkItem; now: 
       ? Math.max(0, MIN_COSTURA_MS - (now - new Date(emProducaoDesde).getTime()))
       : 0
   const travado = item.status === 'em_producao' && remainingMs > 0
+  const cardStatusClass = isPago ? 'auditoria_aprovada' : item.status
 
   return (
-    <div className={`lya-portal-card ${item.status}`}>
+    <div className={`lya-portal-card ${cardStatusClass}`}>
       <div className="lya-portal-card-header">
         <span className="lya-portal-card-code">{item.code}</span>
         <span
@@ -45,7 +51,14 @@ export function PortalLoteCard({ item, now, onAdvance }: { item: WorkItem; now: 
             color: isPago ? '#fde047' : 'var(--p-gray-700)',
           }}
         >
-          {STATUS_LABELS[item.status]}
+          {isPago ? STATUS_LABELS.auditoria_aprovada : STATUS_LABELS[item.status]}
+          {isDivergente && (
+            <InfoPopover
+              icon="fa-triangle-exclamation"
+              text="Auditado com ressalvas — foi encontrada uma divergência na conferência deste lote."
+              align="right"
+            />
+          )}
         </span>
       </div>
 

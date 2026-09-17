@@ -18,7 +18,7 @@ const TABS: Array<{ key: string; label: string; icon: string; statuses?: WorkIte
   { key: 'em_producao', label: 'Em Costura', icon: 'fa-scissors', statuses: ['em_producao'] },
   { key: 'pronto', label: 'Prontos', icon: 'fa-box-open', statuses: ['pronto'] },
   { key: 'coletado', label: 'Coletados', icon: 'fa-truck', statuses: ['coletado', 'descarregado'] },
-  { key: 'pago', label: 'Pagos', icon: 'fa-money-bill-wave', statuses: ['auditoria_aprovada'] },
+  { key: 'pago', label: 'Pagos', icon: 'fa-money-bill-wave', statuses: ['auditoria_aprovada', 'auditoria_divergente'] },
 ]
 
 export function PortalAtelierPage() {
@@ -72,7 +72,9 @@ export function PortalAtelierPage() {
 
   const finance = useMemo(() => {
     const emAtelie = items.filter((i) => ['criado', 'em_atelie', 'em_producao', 'pronto'].includes(i.status))
-    const liberado = items.filter((i) => ['coletado', 'descarregado', 'auditoria_aprovada'].includes(i.status))
+    const liberado = items.filter((i) =>
+      ['coletado', 'descarregado', 'auditoria_aprovada', 'auditoria_divergente'].includes(i.status)
+    )
     const sum = (list: WorkItem[]) => list.reduce((s, i) => s + (i.metrics.orcamento || 0), 0)
     const sumMetros = (list: WorkItem[]) => list.reduce((s, i) => s + (i.metrics.totalMetros || 0), 0)
     return {
