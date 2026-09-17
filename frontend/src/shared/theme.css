@@ -1373,6 +1373,9 @@ table.lya-table tbody tr:hover {
 }
 
 .lya-portal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   flex-shrink: 0;
   padding: 0.5rem 0.875rem;
   border-radius: 20px;
@@ -1382,6 +1385,10 @@ table.lya-table tbody tr:hover {
   background: #fff;
   color: var(--p-gray-600);
   cursor: pointer;
+}
+
+.lya-portal-tab i {
+  font-size: 0.75rem;
 }
 
 .lya-portal-tab.active {
@@ -1627,4 +1634,236 @@ table.lya-table tbody tr:hover {
 }
 [data-theme="dark"] .lya-icon-btn.danger:hover {
   background: rgba(220, 38, 38, 0.28);
+}
+
+/* ===================================================================== */
+/* PORTAL DO ATELIÊ — busca, badge de adiantamento, trava de costura,    */
+/* bottom sheet e bottom navigation (fidelidade ao protótipo mobile)     */
+/* ===================================================================== */
+
+/* .lya-search-box usa tokens globais --gray-* (invertem no dark mode); o
+   Portal do Ateliê é sempre claro, então precisa da própria paleta --p-gray-*,
+   igual ao ajuste já feito para .lya-empty-state. */
+.lya-portal .lya-search-box {
+  background: var(--p-gray-50);
+  border-color: var(--p-gray-200);
+}
+.lya-portal .lya-search-box input {
+  color: var(--p-gray-800);
+}
+.lya-portal .lya-search-box i {
+  color: var(--p-gray-400);
+}
+
+.lya-fin-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.lya-adiantamento-badge {
+  background: rgba(254, 240, 138, 0.15);
+  border: 1px solid rgba(253, 224, 71, 0.4);
+  color: #fef08a;
+  padding: 0.35rem 0.625rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.lya-portal-container {
+  padding-bottom: calc(85px + env(safe-area-inset-bottom, 20px));
+}
+
+/* Botão travado (cronômetro dos 15 min mínimos de costura, espelha MIN_COSTURA_MS) */
+.lya-btn-locked {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1.5px dashed #f87171;
+  font-family: var(--font-mono);
+  animation: lya-pulse-border 2s infinite;
+}
+@keyframes lya-pulse-border {
+  0%,
+  100% {
+    border-color: #f87171;
+  }
+  50% {
+    border-color: #ef4444;
+    background: #fecaca;
+  }
+}
+
+.lya-btn-dark {
+  background: var(--p-gray-900);
+  color: #fff;
+}
+
+.lya-lock-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0.5rem auto 0.75rem auto;
+}
+
+.lya-sheet-alert-title {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--p-gray-900);
+  margin-bottom: 0.5rem;
+}
+
+.lya-sheet-alert-text {
+  font-size: 0.8125rem;
+  color: var(--p-gray-600);
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+/* Bottom sheet (gaveta deslizante) */
+.lya-bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+.lya-bottom-sheet-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+.lya-bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+  padding: 1.25rem;
+  z-index: 2001;
+  transform: translateY(0);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.lya-bottom-sheet-handle {
+  width: 44px;
+  height: 4.5px;
+  background: var(--p-gray-300);
+  border-radius: 3px;
+  margin: 0 auto 1rem auto;
+}
+
+.lya-sheet-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--p-gray-900);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.lya-sheet-close-btn {
+  background: var(--p-gray-100);
+  border: none;
+  color: var(--p-gray-600);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.lya-sheet-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--p-gray-100);
+  font-size: 0.8125rem;
+}
+.lya-sheet-row-label {
+  color: var(--p-gray-500);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.lya-sheet-row-value {
+  color: var(--p-gray-900);
+  font-weight: 800;
+  text-align: right;
+}
+
+.lya-sheet-adiantamento-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fefce8;
+  color: #854d0e;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+.lya-sheet-adiantamento-row strong {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+}
+
+/* Bottom navigation bar fixa */
+.lya-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--p-gray-200);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 10px)) 1rem;
+  z-index: 999;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.lya-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--p-gray-500);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+.lya-bottom-nav-item i {
+  font-size: 1.125rem;
+}
+.lya-bottom-nav-item.active {
+  color: var(--primary);
 }

@@ -35,6 +35,9 @@ export function previousStatus(status: WorkItemStatus): WorkItemStatus | undefin
   return idx > 0 ? ORDER[idx - 1] : undefined
 }
 
+/** Espelha `MIN_COSTURA_MS` de backend/src/modules/work-queue/stateMachine.js — mantém em sincronia. */
+export const MIN_COSTURA_MS = 15 * 60 * 1000
+
 const ATELIER_ALLOWED_STATUSES: WorkItemStatus[] = ['criado', 'em_atelie', 'em_producao']
 
 export function atelierCanAdvance(status: WorkItemStatus) {
