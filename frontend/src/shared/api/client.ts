@@ -16,10 +16,13 @@ apiClient.interceptors.request.use((config) => {
   return config
 })
 
+const LOGIN_ENDPOINTS = ['/auth/login', '/auth/atelier/login']
+
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginRequest = LOGIN_ENDPOINTS.some((path) => error.config?.url?.includes(path))
+    if (error.response?.status === 401 && !isLoginRequest) {
       const rawPrincipal = localStorage.getItem(PRINCIPAL_KEY)
       const isAtelier = rawPrincipal ? JSON.parse(rawPrincipal).principalType === 'atelier' : false
       localStorage.removeItem(TOKEN_KEY)
