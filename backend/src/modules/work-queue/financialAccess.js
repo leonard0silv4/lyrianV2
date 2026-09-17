@@ -8,8 +8,8 @@ function isAtelier(principal) {
 
 /**
  * Owner: ve tudo.
- * Atelie: ve o valor (orcamento = mao de obra do proprio lote) e o status de pagamento,
- *   mas nao ve bonus nem advancedMoneyPayment (extras controlados pelo owner).
+ * Atelie: ve o valor (orcamento = mao de obra do proprio lote), o bonus e o status de pagamento,
+ *   mas nao ve advancedMoneyPayment (extra controlado pelo owner).
  * Staff nao-owner (admin): nao ve nenhum campo financeiro.
  */
 function stripFinancials(workItem, principal) {
@@ -20,7 +20,7 @@ function stripFinancials(workItem, principal) {
   }
 
   if (isAtelier(principal)) {
-    const { bonus, advancedMoneyPayment, ...rest } = plain;
+    const { advancedMoneyPayment, ...rest } = plain;
     return rest;
   }
 

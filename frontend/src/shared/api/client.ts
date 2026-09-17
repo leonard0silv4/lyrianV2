@@ -24,7 +24,9 @@ apiClient.interceptors.response.use(
     const isLoginRequest = LOGIN_ENDPOINTS.some((path) => error.config?.url?.includes(path))
     if (error.response?.status === 401 && !isLoginRequest) {
       const rawPrincipal = localStorage.getItem(PRINCIPAL_KEY)
-      const isAtelier = rawPrincipal ? JSON.parse(rawPrincipal).principalType === 'atelier' : false
+      const isAtelier = rawPrincipal
+        ? JSON.parse(rawPrincipal).principalType === 'atelier'
+        : window.location.pathname.startsWith('/v2/portal')
       localStorage.removeItem(TOKEN_KEY)
       localStorage.removeItem(PRINCIPAL_KEY)
       window.location.href = isAtelier ? '/v2/login-atelie' : '/v2/login'

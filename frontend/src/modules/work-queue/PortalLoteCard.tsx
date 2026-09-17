@@ -78,6 +78,18 @@ export function PortalLoteCard({ item, now, onAdvance }: { item: WorkItem; now: 
             <span className="lya-valor-destaque">R$ {item.metrics.orcamento.toFixed(2)}</span>
           </div>
         )}
+        {!!item.bonus && (
+          <div className="lya-specs-line-valor">
+            <span style={{ fontWeight: 800, color: isPago ? '#d1fae5' : 'var(--p-gray-600)' }}>Bônus</span>
+            <span className="lya-valor-destaque">+R$ {item.bonus.toFixed(2)}</span>
+          </div>
+        )}
+        {!!item.observacao && (
+          <div style={{ fontSize: '0.75rem', color: isPago ? 'rgba(255,255,255,0.85)' : 'var(--p-gray-600)' }}>
+            <span style={{ fontWeight: 800 }}>Observação: </span>
+            {item.observacao}
+          </div>
+        )}
       </div>
 
       {travado ? (

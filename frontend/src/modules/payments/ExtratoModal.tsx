@@ -47,7 +47,9 @@ export function ExtratoModal({
               return (
                 <tr key={b._id}>
                   <td className="lya-mono">{new Date(b.createdAt).toLocaleString('pt-BR')}</td>
-                  <td>{b.items.length}</td>
+                  <td className="lya-mono" title={b.items.map((i) => i.code).join(', ')}>
+                    {b.items.map((i) => i.code).join(', ')}
+                  </td>
                   <td className="lya-mono">{totalMetros}m</td>
                   <td className="lya-mono">R$ {b.valorBruto.toFixed(2)}</td>
                   <td className="lya-mono" style={{ color: 'var(--warning)' }}>
