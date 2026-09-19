@@ -79,6 +79,7 @@ const AuditoriaRow = memo(function AuditoriaRow({
   item,
   atelier,
   sku,
+  skuCorrigido,
   canAuditar,
   canLancar,
   pushing,
@@ -90,6 +91,7 @@ const AuditoriaRow = memo(function AuditoriaRow({
   item: WorkItem
   atelier?: Atelier
   sku?: string
+  skuCorrigido?: string
   canAuditar: boolean
   canLancar: boolean
   pushing: boolean
@@ -104,6 +106,7 @@ const AuditoriaRow = memo(function AuditoriaRow({
   // lançamento fica desabilitado enquanto o lote nao tem quantidade auditada —
   // sem isso nao ha o que enviar de forma confiavel pro estoque real da loja.
   const podeLancar = status !== 'aguardando' && status !== 'lancado_estoque'
+  const skuEfetivo = skuCorrigido || sku
 
   return (
     <tr ref={measureRef} data-index={dataIndex}>
@@ -135,7 +138,15 @@ const AuditoriaRow = memo(function AuditoriaRow({
         {item.metrics.totalMetros}m <span style={{ color: 'var(--gray-500)', fontWeight: 500 }}>({item.metrics.qtdRolos} rol)</span>
       </td>
       <td className="lya-mono" style={{ color: sku ? 'var(--primary)' : 'var(--gray-400)', fontWeight: 700 }}>
-        {sku || 'sem SKU'}
+        {skuCorrigido && skuCorrigido !== sku ? (
+          <>
+            <span style={{ textDecoration: 'line-through', color: 'var(--gray-400)', fontWeight: 500 }}>{sku || 'sem SKU'}</span>
+            {' → '}
+            <span title="SKU realmente recebido, usado no lançamento de estoque">{skuCorrigido}</span>
+          </>
+        ) : (
+          sku || 'sem SKU'
+        )}
       </td>
       <td className="lya-mono" style={{ fontWeight: 700 }}>
         {item.quantidadeAuditada ?? '—'}
@@ -180,7 +191,7 @@ const AuditoriaRow = memo(function AuditoriaRow({
         {canLancar && (
           <Button
             style={{ padding: '0.35rem 0.6rem', background: podeLancar ? meta.btnBg : undefined, color: podeLancar ? '#fff' : undefined }}
-            disabled={!podeLancar || !sku || pushing}
+            disabled={!podeLancar || !skuEfetivo || pushing}
             title={status === 'aguardando' ? 'Audite o lote antes de lançar no estoque' : undefined}
             onClick={() => onLancarEstoque(item)}
           >
@@ -399,12 +410,14 @@ export function AuditoriaPage() {
             {virtualRows.map((virtualRow) => {
               const item = items[virtualRow.index]
               const measurement = measurementById.get(item.specs.measurementId || '')
+              const measurementCorrigido = measurementById.get(item.skuAuditado || '')
               return (
                 <AuditoriaRow
                   key={item._id}
                   item={item}
                   atelier={atelierById.get(item.atelierId)}
                   sku={measurement?.sku}
+                  skuCorrigido={measurementCorrigido?.sku}
                   canAuditar={canAuditar}
                   canLancar={canLancar}
                   pushing={pushingId === item._id}

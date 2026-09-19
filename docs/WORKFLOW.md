@@ -22,6 +22,19 @@ Ver tabela completa em `STATUS.md`. Resumo: o ateliê confirma recebimento e aca
 - **Admin** (role sem `payments:manage`): tudo do ateliê + coletar, descarregar, auditar, emitir lotes, cadastrar ateliês. Não vê nem manipula valores financeiros.
 - **Owner**: tudo do admin + ver valores (orçamento, bônus, pagamento), marcar como pago, aplicar bônus, reverter etapas.
 
-## 6. Auditoria
+## 6. Auditoria física do lote (barracão)
 
-Toda criação, atualização e mudança de status gera um registro em `AuditLog` (entidade, usuário, ação, campo, valor anterior/novo, timestamp), consultável via `GET /audit`.
+Tela dedicada em `/v2/auditoria` (`AuditoriaPage.tsx`), separada do checklist de status. Lista lotes `descarregado` (aguardando conferência), `auditoria_aprovada` e `auditoria_divergente`.
+
+Ao clicar "Auditar" (`AuditoriaModal.tsx`, `POST /work-queue/:id/transition`), o operador registra:
+- **Conforme ou Divergente** (`toStatus=auditoria_aprovada|auditoria_divergente`).
+- Se divergente: **quantidade real** de peças no fardo (`quantidadeAuditada`, 1-50) e **observação** livre (mínimo 5 caracteres).
+- Se o lote físico veio com **SKU/medida diferente do pedido** (ex.: pedido 8x8, recebido 9x9): opção "Lote veio com SKU/medida diferente do esperado", que grava o SKU real em `WorkItem.skuAuditado`. Esse campo é isolado de `specs.measurementId`/`metrics.orcamento` — **não muda a medida do pedido nem o valor a pagar ao ateliê**, só qual SKU recebe o estoque no BaseLinker.
+
+Depois de auditado, "Lançar Estoque" (`POST /work-queue/:id/lancar-estoque`) envia `quantidadeAuditada` unidades pro BaseLinker, usando o SKU de `skuAuditado` quando informado, senão o SKU do `specs.measurementId` original.
+
+A tela atualiza em tempo real via SSE (`useSse`, evento `workItemUpdated`), sem necessidade de refetch manual.
+
+## 7. Log de auditoria (trilha de mudanças)
+
+Toda criação, atualização e mudança de status gera um registro em `AuditLog` (entidade, usuário, ação, campo, valor anterior/novo, timestamp), consultável via `GET /audit`. Distinto da "Auditoria física" da seção 6 — aqui é só o histórico genérico de mudanças de qualquer entidade.

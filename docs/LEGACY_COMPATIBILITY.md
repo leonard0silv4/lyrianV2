@@ -18,12 +18,16 @@ O V2 (`lyria_ateliers`) é um sistema isolado — não chama nenhum endpoint do 
 - **Status booleanos → máquina de estados única** (`status` enum + tabela de transições permitidas). Ver `STATUS.md`.
 - **RBAC morto do legado → RBAC efetivamente usado**: o legado tinha `Role`/`Permission` mas nenhum middleware os consultava; aqui todo endpoint passa por `requirePermission`.
 
-## Não reaproveitado (fora de escopo desta entrega)
+## Funcionalidades construídas após a entrega inicial
 
-- Tela 03 (auditoria com divergência detalhada + quantidade real) — só os campos mínimos existem no model (`status=auditoria_divergente`), sem tela dedicada.
-- Tela 04 (lançamento em estoque BaseLinker) e integração real com o ERP.
+- **Tela de Auditoria dedicada** (`AuditoriaPage.tsx` / `AuditoriaModal.tsx`, backend `workQueue.controller.js:transition`) — divergência com quantidade real auditada e observação livre, distinta do checklist de etapas. Ver `WORKFLOW.md`.
+- **Lançamento de estoque no BaseLinker** (`lancarEstoque`, `baselinkerStock.service.js`) — integração real com o ERP, disparada manualmente a partir da tela de Auditoria após o lote ser aprovado ou marcado divergente.
+- **Correção de SKU divergente na auditoria** — quando o lote físico chega com SKU/medida diferente do pedido original, o auditor registra o SKU realmente recebido (`WorkItem.skuAuditado`) direto no modal de auditoria. Esse campo é isolado de `specs`/`metrics.orcamento`: só afeta qual SKU recebe o incremento de estoque no BaseLinker, nunca o valor a pagar ao ateliê.
+- **Tempo real via SSE** (`useSse`, `sse.broadcastWorkItem`) — a tela de Auditoria (e outras do work-queue) atualiza automaticamente com eventos do servidor, substituindo o refetch manual do legado.
+
+## Não reaproveitado (fora de escopo)
+
 - Telas 06/07 (parametrização de engenharia, PCP semanal por SKU).
-- SSE/tempo real (o legado tinha; o V2 usa refetch manual por enquanto).
 - Comprovante em PDF real (o V2 usa "Imprimir" do navegador em vez de gerar um arquivo PDF) e importação de dados existentes de faccionistas — não implementados nesta rodada.
 
 ## Diferenças de comportamento deliberadas

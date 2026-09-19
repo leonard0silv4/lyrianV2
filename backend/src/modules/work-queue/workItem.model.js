@@ -57,6 +57,11 @@ const workItemSchema = new mongoose.Schema(
     // (pode divergir de specs.quantidadeFardo, que e o planejado na emissao).
     quantidadeAuditada: { type: Number },
 
+    // SKU/measurement realmente recebido, quando diverge do esperado em specs.measurementId
+    // (ex.: lote pedido como 8x8 chegou fisicamente como 9x9). Usado apenas para o lancamento
+    // de estoque no BaseLinker; nao altera specs nem metrics.orcamento (nao mexe em pagamento).
+    skuAuditado: { type: mongoose.Schema.Types.ObjectId, ref: "Measurement" },
+
     estoqueBaseLinker: {
       status: { type: String, enum: ESTOQUE_BASELINKER_STATUS, default: "pendente" },
       quantidadeEnviada: { type: Number },

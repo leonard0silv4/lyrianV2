@@ -198,7 +198,7 @@ async function create(req, res) {
 const AUDITORIA_STATUSES = ["auditoria_aprovada", "auditoria_divergente"];
 
 async function transition(req, res) {
-  const { toStatus, observacao, quantidadeAuditada } = req.body;
+  const { toStatus, observacao, quantidadeAuditada, skuAuditadoId } = req.body;
   if (!toStatus) {
     return res.status(400).json({ message: "toStatus e obrigatorio" });
   }
@@ -244,6 +244,21 @@ async function transition(req, res) {
         return res.status(400).json({ message: "Descreva a divergencia encontrada (minimo 5 caracteres)" });
       }
       item.quantidadeAuditada = qtd;
+
+      // SKU realmente recebido, quando diverge do esperado (specs.measurementId).
+      // So afeta o lancamento de estoque no BaseLinker — nunca specs/metrics/orcamento,
+      // que sao a base do pagamento ao atelie.
+      if (skuAuditadoId !== undefined) {
+        if (skuAuditadoId) {
+          const skuMeasurement = await Measurement.findById(skuAuditadoId);
+          if (!skuMeasurement) {
+            return res.status(400).json({ message: "SKU auditado informado nao existe" });
+          }
+          item.skuAuditado = skuMeasurement._id;
+        } else {
+          item.skuAuditado = undefined;
+        }
+      }
     } else {
       item.quantidadeAuditada = quantidadeAuditada !== undefined ? Number(quantidadeAuditada) : item.specs.quantidadeFardo;
     }
@@ -274,8 +289,16 @@ async function transition(req, res) {
   // observacao/quantidade de uma auditoria (ex.: divergente) ficava so como o
   // status bruto "Descarregado -> Em Analise", sem nenhum detalhe do que foi
   // apurado, mesmo com o operador tendo preenchido tudo certo no modal.
+  let skuReason = "";
+  if (item.skuAuditado) {
+    const [esperado, recebido] = await Promise.all([
+      Measurement.findById(item.specs.measurementId),
+      Measurement.findById(item.skuAuditado),
+    ]);
+    skuReason = ` — SKU esperado: ${esperado?.sku ?? "?"}, SKU recebido: ${recebido?.sku ?? "?"}`;
+  }
   const auditReason = AUDITORIA_STATUSES.includes(toStatus)
-    ? `Qtd. auditada: ${item.quantidadeAuditada} un.${observacao ? ` — ${observacao}` : ""}`
+    ? `Qtd. auditada: ${item.quantidadeAuditada} un.${observacao ? ` — ${observacao}` : ""}${skuReason}`
     : observacao;
 
   await auditService.record({
@@ -310,7 +333,10 @@ async function lancarEstoque(req, res) {
     return res.status(409).json({ message: "Lote sem quantidade auditada registrada" });
   }
 
-  const measurement = await Measurement.findById(item.specs.measurementId);
+  // Prioriza o SKU realmente recebido (registrado na auditoria), quando divergente
+  // do esperado — sem isso o estoque era sempre lancado no SKU do pedido original,
+  // mesmo quando o lote fisico veio com outra medida.
+  const measurement = await Measurement.findById(item.skuAuditado || item.specs.measurementId);
   const sku = measurement?.sku;
   if (!sku) {
     return res.status(422).json({ message: "A medida deste lote nao tem SKU cadastrado" });
