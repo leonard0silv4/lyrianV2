@@ -31,9 +31,6 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Ativar Yarn via corepack (usa a versão fixada em packageManager)
-        run: corepack enable
-
       - name: Snapshot do commit atualmente em produção
         run: echo "OLD_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 

@@ -2,7 +2,7 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "packageManager": "yarn@4.18.0",
+  "packageManager": "yarn@1.22.19",
   "type": "module",
   "scripts": {
     "dev": "vite",
